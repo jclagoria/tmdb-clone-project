@@ -1,42 +1,57 @@
-# sv
+# TMDB Clone
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A clone of TheMovieDB (TMDB) website built with modern web technologies.
 
-## Creating a project
+## Project Idea
 
-If you're seeing this, you've probably already done this step. Congrats!
+A movie and TV show browsing platform that replicates the core functionality and design of TMDB, featuring movie/TV discovery, trending content sections, and search capabilities.
 
-```sh
-# create a new project
-npx sv create my-app
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│                 SvelteKit                    │
+│  (SSR + Client-side hydration)             │
+├─────────────────────────────────────────────┤
+│  Pages: Home | Search                       │
+├─────────────────────────────────────────────┤
+│  Components: Header, Hero, Section,        │
+│  Carousel, MovieCard, Footer                │
+├─────────────────────────────────────────────┤
+│  Data Layer (API Abstraction)              │
+│  - Mock mode for development                │
+│  - Ready for TMDB API integration           │
+├─────────────────────────────────────────────┤
+│  State: Svelte 5 Runes ($state, $derived)  │
+└─────────────────────────────────────────────┘
 ```
 
-To recreate this project with the same configuration:
+## Technologies
 
-```sh
-# recreate this project
-pnpm dlx sv@0.15.1 create --template minimal --types ts --install pnpm tmdb-frontend
+- **Framework:** SvelteKit + Svelte 5
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **UI Components:** shadcn-svelte
+- **Carousel:** embla-carousel-svelte
+- **Images:** @unpic/svelte
+- **Icons:** lucide-svelte
+- **Validation:** Zod
+- **Build:** Vite
+
+## Getting Started
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Build for production
+pnpm build
 ```
 
-## Developing
+## Environment
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- Node.js 20+
+- pnpm (package manager)
