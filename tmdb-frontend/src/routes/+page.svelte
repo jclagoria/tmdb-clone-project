@@ -2,23 +2,22 @@
 	import Hero from '$lib/components/Hero.svelte';
 	import Section from '$lib/components/Section.svelte';
 	import { mockTrending, mockMovies, mockPopular, mockFreeToWatch } from '$lib/data/movies';
-	import type { Movie } from '$lib/types/movie';
 
-	let trendingActiveTab = $state('today');
+    import { getTrendingMedia } from "$lib/api";
+    import type {Movie} from "$lib/types/movie";
+
+    let trendingActiveTab = $state('today');
 	let trailersActiveTab = $state('popular');
 	let popularActiveTab = $state('streaming');
 	let freeActiveTab = $state('movies');
+
+    let trendingMedia = $state<Movie[]>(mockTrending.slice(0, 10));
+    let isLoadingTrending = $state<boolean>(false);
 
 	const trendingTabs = ['Today', 'This Week'];
 	const trailersTabs = ['Popular', 'Streaming', 'On TV', 'For Rent', 'In Theaters'];
 	const popularTabs = ['Streaming', 'On TV', 'For Rent', 'In Theaters'];
 	const freeTabs = ['Movies', 'TV'];
-
-	const trendingMovies = $derived(
-		trendingActiveTab === 'today' 
-			? mockTrending.slice(0, 10)
-			: mockTrending.slice(5, 15)
-	);
 
 	const trailersMovies = $derived(
 		mockMovies.filter(m => m.media_type === 'movie').slice(0, 10)
@@ -36,6 +35,23 @@
 			: mockFreeToWatch.filter(m => m.media_type === 'tv')
 	);
 
+    async function fetchTrending(window: 'day' | 'week') {
+        isLoadingTrending = true;
+        try {
+            trendingMedia = await getTrendingMedia(window);
+        } catch (error) {
+            console.error('Failed to fetch trending:', error);
+            trendingMedia = mockMovies.slice(0, 10);
+        } finally {
+            isLoadingTrending = false;
+        }
+    }
+
+    $effect(() => {
+        const timeWindow = trendingActiveTab === 'today' ? 'day' : 'week';
+        fetchTrending(timeWindow);
+    });
+
 	function handleSearch(query: string) {
 		console.log('Search query:', query);
 	}
@@ -47,8 +63,9 @@
 	title="Trending"
 	tabs={trendingTabs}
 	bind:activeTab={trendingActiveTab}
-	movies={trendingMovies}
+	movies={trendingMedia}
 	icon="trending"
+    isLoading={isLoadingTrending}
 />
 
 <Section
