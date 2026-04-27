@@ -5,12 +5,25 @@ spring:
   application:
     name: tmdb-backend
 
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.api.tmdb: INFO
+    reactor: WARN
+    io.github.resilience4j: WARN
+    org.springframework: WARN
+  file:
+    name: ./logs/tmdb-backend.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
 # Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,circuitbreakers
+        include: health,info,metrics,circuitbreakers,ratelimiters
   endpoint:
     health:
       show-details: always
@@ -27,7 +40,7 @@ management:
 resilience4j:
   circuitbreaker:
     instances:
-      numeratorApi:
+      tmdbApi:
         registerHealthIndicator: true
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
@@ -37,18 +50,42 @@ resilience4j:
         failureRateThreshold: 30
         slowCallRateThreshold: 100
         slowCallDurationThreshold: 2s
+      cloneApi:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 30
+
+  rateLimiter:
+    instances:
+      tmdbApi:
+        registerHealthIndicator: true
+        limitForPeriod: 40
+        limitRefreshPeriod: 10s
+        timeoutDuration: 0
+      cloneApi:
+        registerHealthIndicator: true
+        limitForPeriod: 60
+        limitRefreshPeriod: 10s
+        timeoutDuration: 0
 
   retry:
     instances:
-      numeratorApi:
+      tmdbApi:
         maxAttempts: 3
         waitDuration: 500ms
         enableExponentialBackoff: true
         exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - java.io.IOException
 
-  timelimiter:
+  timeLimiter:
     instances:
-      numeratorApi:
+      tmdbApi:
         timeoutDuration: 10s
 
 springdoc:
@@ -60,3 +97,9 @@ springdoc:
 tmdb:
   base-url: ${TMDB_API_URL}
   access-token: ${TMDB_API_ACCESS_TOKEN}
+  webclient:
+    connect-timeout: 5s
+    response-timeout: 10s
+    pool:
+      max-connections: 50
+      pending-acquire-timeout: 10s
