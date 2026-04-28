@@ -8,23 +8,42 @@ A movie and TV show browsing platform that replicates the core functionality and
 
 ## Architecture
 
+> ⭐ **Feature-Based Architecture**
+> 
+> This project follows a feature-based architecture for scalability. Each feature (e.g., `trending`, `search`, `popular`) is self-contained in `src/lib/features/<feature>/` with its own API, types, store, and components.
+> 
+> See [docs/trending/](./docss/trending/) for a complete example implementation.
+
 ```
-┌─────────────────────────────────────────────┐
-│                 SvelteKit                    │
-│  (SSR + Client-side hydration)             │
-├─────────────────────────────────────────────┤
-│  Pages: Home | Search                       │
-├─────────────────────────────────────────────┤
-│  Components: Header, Hero, Section,        │
-│  Carousel, MovieCard, Footer                │
-├─────────────────────────────────────────────┤
-│  Data Layer (API Abstraction)              │
-│  - Mock mode for development                │
-│  - Ready for TMDB API integration           │
-├─────────────────────────────────────────────┤
-│  State: Svelte 5 Runes ($state, $derived)  │
-└─────────────────────────────────────────────┘
+src/lib/
+├── features/           ⭐ Feature-based modules
+│   └── trending/
+│       ├── api.ts
+│       ├── types.ts
+│       ├── store.svelte.ts
+│       └── components/
+├── components/         # Shared UI components
+├── api/               # API utilities
+└── types/             # Shared types
 ```
+
+---
+
+## Previous Architecture (Flat)
+
+```
+src/lib/
+├── api/index.ts       # All API calls (single file)
+├── components/        # All components flat
+└── types/movie.ts     # Mixed types
+```
+
+---
+
+The feature-based approach enables:
+- **Isolation**: Each feature is independent and testable
+- **Scalability**: Add new features without modifying shared code
+- **Maintainability**: Changes are scoped to specific features
 
 ## Technologies
 
