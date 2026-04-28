@@ -10,4 +10,9 @@ declare global {
 	}
 }
 
+declare module '$env/static/public' {
+	export const PUBLIC_CLONE_API_BASE: string;
+	export const PUBLIC_IMAGE_BASE: string;
+}
+
 export {};

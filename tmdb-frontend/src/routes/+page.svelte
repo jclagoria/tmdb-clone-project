@@ -1,20 +1,13 @@
 <script lang="ts">
 	import Hero from '$lib/components/Hero.svelte';
+    import TrendingSection from "$lib/features/components/TrendingSection.svelte";
 	import Section from '$lib/components/Section.svelte';
-	import { mockTrending, mockMovies, mockPopular, mockFreeToWatch } from '$lib/data/movies';
+	import { mockMovies, mockPopular, mockFreeToWatch } from '$lib/data/movies';
 
-    import { getTrendingMedia } from "$lib/api";
-    import type {Movie} from "$lib/types/movie";
-
-    let trendingActiveTab = $state('today');
 	let trailersActiveTab = $state('popular');
 	let popularActiveTab = $state('streaming');
 	let freeActiveTab = $state('movies');
 
-    let trendingMedia = $state<Movie[]>(mockTrending.slice(0, 10));
-    let isLoadingTrending = $state<boolean>(false);
-
-	const trendingTabs = ['Today', 'This Week'];
 	const trailersTabs = ['Popular', 'Streaming', 'On TV', 'For Rent', 'In Theaters'];
 	const popularTabs = ['Streaming', 'On TV', 'For Rent', 'In Theaters'];
 	const freeTabs = ['Movies', 'TV'];
@@ -35,23 +28,6 @@
 			: mockFreeToWatch.filter(m => m.media_type === 'tv')
 	);
 
-    async function fetchTrending(window: 'day' | 'week') {
-        isLoadingTrending = true;
-        try {
-            trendingMedia = await getTrendingMedia(window);
-        } catch (error) {
-            console.error('Failed to fetch trending:', error);
-            trendingMedia = mockMovies.slice(0, 10);
-        } finally {
-            isLoadingTrending = false;
-        }
-    }
-
-    $effect(() => {
-        const timeWindow = trendingActiveTab === 'today' ? 'day' : 'week';
-        fetchTrending(timeWindow);
-    });
-
 	function handleSearch(query: string) {
 		console.log('Search query:', query);
 	}
@@ -59,14 +35,7 @@
 
 <Hero onSearch={handleSearch} />
 
-<Section
-	title="Trending"
-	tabs={trendingTabs}
-	bind:activeTab={trendingActiveTab}
-	movies={trendingMedia}
-	icon="trending"
-    isLoading={isLoadingTrending}
-/>
+<TrendingSection />
 
 <Section
 	title="Latest Trailers"

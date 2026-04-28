@@ -3,7 +3,6 @@ import type { Movie, SearchResponse } from '$lib/types/movie';
 
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
-const CLONE_API_BASE = 'http://localhost:8080/api/v1';
 
 let apiKey = '';
 let mockMode = true;
@@ -17,63 +16,6 @@ export function getImageUrl(path: string | null, size: string = 'w500'): string 
 	if (!path) return null;
 	return `${IMAGE_BASE}/${size}${path}`;
 }
-
-// <-- Interfaces -->
-interface TrendingApiResponse {
-    id: number;
-    title: string;
-    originalTitle: string;
-    overview: string;
-    posterPath: string | null;
-    backdropPath: string | null;
-    mediaType: string;
-    originalLanguage: string;
-    genreIds: number[];
-    popularity: number;
-    releaseDate: string | null;
-    adult: boolean;
-    video: boolean | null;
-    voteAverage: number;
-    voteCount: number;
-}
-
-// <-- CALL TO CLONE API-->
-
-export async function getTrendingMedia(timeWindow: `day` | 'week'): Promise<Movie[]> {
-    const response = await fetch(`${CLONE_API_BASE}/trending/${timeWindow}?language=en-US`);
-
-    if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return data.results.map(transformToMediaType);
-}
-
-function transformToMediaType(apiResponse: TrendingApiResponse): Movie {
-    return {
-        id: apiResponse.id,
-        title: apiResponse.title,
-        original_title: apiResponse.originalTitle,
-        name: apiResponse.title,
-        original_name: apiResponse.originalTitle,
-        overview: apiResponse.overview,
-        poster_path: apiResponse.posterPath,
-        backdrop_path: apiResponse.backdropPath,
-        release_date: apiResponse.releaseDate!,
-        first_air_date: apiResponse.releaseDate!,
-        vote_average: apiResponse.voteAverage,
-        vote_count: apiResponse.voteCount,
-        genre_ids: apiResponse.genreIds,
-        adult: apiResponse.adult,
-        original_language: apiResponse.originalLanguage,
-        popularity: apiResponse.popularity,
-        media_type: apiResponse.mediaType as 'movie' | 'tv',
-    };
-}
-
-// <-- END CALL TO CLONE API-->
 
 export async function getTrending(timeWindow: 'day' | 'week' = 'day'): Promise<Movie[]> {
 	if (mockMode) {
