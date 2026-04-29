@@ -1,25 +1,18 @@
 <script lang="ts">
 	import Hero from '$lib/components/Hero.svelte';
     import TrendingSection from "$lib/features/components/TrendingSection.svelte";
+    import WhatsPopularSection from "$lib/features/whats-popular/components/WhatsPopularSection.svelte";
 	import Section from '$lib/components/Section.svelte';
-	import { mockMovies, mockPopular, mockFreeToWatch } from '$lib/data/movies';
+	import { mockMovies, mockFreeToWatch } from '$lib/data/movies';
 
 	let trailersActiveTab = $state('popular');
-	let popularActiveTab = $state('streaming');
 	let freeActiveTab = $state('movies');
 
 	const trailersTabs = ['Popular', 'Streaming', 'On TV', 'For Rent', 'In Theaters'];
-	const popularTabs = ['Streaming', 'On TV', 'For Rent', 'In Theaters'];
 	const freeTabs = ['Movies', 'TV'];
 
 	const trailersMovies = $derived(
 		mockMovies.filter(m => m.media_type === 'movie').slice(0, 10)
-	);
-
-	const popularMovies = $derived(
-		popularActiveTab === 'streaming'
-			? mockPopular.filter((_, i) => i % 2 === 0)
-			: mockPopular.filter((_, i) => i % 2 !== 0)
 	);
 
 	const freeMovies = $derived(
@@ -45,13 +38,7 @@
 	icon="play"
 />
 
-<Section
-	title="What's Popular"
-	tabs={popularTabs}
-	bind:activeTab={popularActiveTab}
-	movies={popularMovies}
-	icon="star"
-/>
+<WhatsPopularSection />
 
 <Section
 	title="Free To Watch"
