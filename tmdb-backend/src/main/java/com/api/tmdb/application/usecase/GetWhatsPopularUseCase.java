@@ -1,6 +1,5 @@
 package com.api.tmdb.application.usecase;
 
-import com.api.tmdb.adapter.outbound.tmdb.mapper.DiscoverMapper;
 import com.api.tmdb.domain.model.DiscoverParams;
 import com.api.tmdb.domain.model.WhatsPopularItem;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
@@ -8,14 +7,14 @@ import com.api.tmdb.domain.port.inbound.WhatsPopularPort;
 import com.api.tmdb.domain.port.outbound.TmdbWhatsPopularClientPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-@Component
+@Service
 public class GetWhatsPopularUseCase implements WhatsPopularPort {
 
     private static final Logger log = LoggerFactory.getLogger(GetWhatsPopularUseCase.class);
