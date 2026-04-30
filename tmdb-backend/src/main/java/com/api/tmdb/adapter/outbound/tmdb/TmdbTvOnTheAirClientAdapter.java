@@ -43,8 +43,7 @@ public class TmdbTvOnTheAirClientAdapter implements TmdbTvOnTheAirPort {
                         .path("/tv/on_the_air")
                         .queryParam("language", language)
                         .queryParam("page", page)
-                        .queryParam("timezone", timezone != null ?
-                                Optional.of(timezone) : Optional.empty())
+                        .queryParamIfPresent("timezone", Optional.ofNullable(timezone))
                         .build())
                 .retrieve()
                 .bodyToMono(Object.class)
