@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface WhatsPopularPort {
     Mono<WhatsPopularResponse> getWhatsPopular(String language, String region, Integer page);
+
+    Mono<WhatsPopularResponse> getForRent(String language, String region, Integer page);
 }

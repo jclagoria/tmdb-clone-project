@@ -21,6 +21,10 @@ public class GetTvOnTheAirUseCase implements TvOnTheAirPort {
     @Override
     public Mono<TvOnTheAirResponse> getTvOnTheAir(String language, Integer page, String timezone) {
         log.info("Executing GetTvOnTheAirUseCase: language={}, page={}, timezone={}", language, page, timezone);
-        return tmdbTvOnTheAirPort.getTvOnTheAir(language, page, timezone);
+        return tmdbTvOnTheAirPort.getTvOnTheAir(language, page, timezone).doOnSuccess(response ->
+                log.info("GetTvOnTheAirUseCase completed: page={}, totalResults={}",
+                        response.page(), response.totalResults()))
+                .doOnError(error ->
+                        log.error("GetTvOnTheAirUseCase failed: {}", error.getMessage(), error));
     }
 }

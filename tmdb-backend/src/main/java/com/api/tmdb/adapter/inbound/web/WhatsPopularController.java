@@ -1,6 +1,7 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
+import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetWhatsPopularUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,9 +25,14 @@ public class WhatsPopularController {
 
     private static final Logger logger = LoggerFactory.getLogger(WhatsPopularController.class);
     private final GetWhatsPopularUseCase getWhatsPopularUseCase;
+    private final GetForRentUseCase getForRentUseCase;
 
-    public WhatsPopularController(GetWhatsPopularUseCase getWhatsPopularUseCase) {
+    public WhatsPopularController(
+            GetWhatsPopularUseCase getWhatsPopularUseCase,
+            GetForRentUseCase getForRentUseCase1
+    ) {
         this.getWhatsPopularUseCase = getWhatsPopularUseCase;
+        this.getForRentUseCase = getForRentUseCase1;
     }
 
     @GetMapping("/streaming")
@@ -51,6 +57,32 @@ public class WhatsPopularController {
 
         Mono<WhatsPopularResponseDTO> response = getWhatsPopularUseCase
                 .getWhatsPopular(language, region, page)
+                .map(WhatsPopularResponseDTO::fromDomain);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/for-rent")
+    @Operation(
+            summary = "Get movies for rent",
+            description = "Get popular movies available for rent",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved movies for rent"),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public ResponseEntity<Mono<WhatsPopularResponseDTO>> getForRent(
+            @Parameter(description = "Language code (e.g., en-US)")
+            @RequestParam(name = "language", defaultValue = "en-US") String language,
+            @Parameter(description = "Region code (e.g., US)")
+            @RequestParam(name = "region", defaultValue = "US") String region,
+            @Parameter(description = "Page number")
+            @RequestParam(name = "page", defaultValue = "1") Integer page) {
+        logger.info("getForRent request: language={}, region={}, page={}", language, region, page);
+
+        Mono<WhatsPopularResponseDTO> response = getForRentUseCase
+                .getForRent(language, region, page)
                 .map(WhatsPopularResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);

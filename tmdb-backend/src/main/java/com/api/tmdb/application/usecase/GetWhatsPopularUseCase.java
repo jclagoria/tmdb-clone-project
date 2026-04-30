@@ -40,7 +40,7 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
                 effectiveRegion,
                 false);
 
-        log.debug("Executing GetWhatsPopularUseCase: region={}, language={}, page={}",
+        log.info("Executing GetWhatsPopularUseCase: region={}, language={}, page={}",
                 effectiveRegion, effectiveLanguage, effectivePage);
 
         Mono<WhatsPopularResponse> moviesMono = tmdbClientPort.discoverMovies(params);
@@ -57,11 +57,16 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
                             .limit(MAX_ITEMS)
                             .toList();
 
-                    log.debug("GetWhatsPopularUseCase completed: totalItems={}, returned={}",
+                    log.info("GetWhatsPopularUseCase completed: totalItems={}, returned={}",
                             allItems.size(), sorted.size());
 
                     return new WhatsPopularResponse(effectivePage, sorted, sorted.size());
                 })
                 .doOnError(error -> log.error("GetWhatsPopularUseCase failed: {}", error.getMessage(), error));
+    }
+
+    @Override
+    public Mono<WhatsPopularResponse> getForRent(String language, String region, Integer page) {
+        return null;
     }
 }

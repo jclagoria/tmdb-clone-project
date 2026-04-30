@@ -1,6 +1,7 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
+import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetWhatsPopularUseCase;
 import com.api.tmdb.domain.model.WhatsPopularItem;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
@@ -25,11 +26,14 @@ class WhatsPopularControllerTest {
     @Mock
     private GetWhatsPopularUseCase getWhatsPopularUseCase;
 
+    @Mock
+    private GetForRentUseCase getForRentUseCase; // Not used in this test but can be added for completeness
+
     private WhatsPopularController whatsPopularController;
 
     @BeforeEach
     void setUp() {
-        whatsPopularController = new WhatsPopularController(getWhatsPopularUseCase);
+        whatsPopularController = new WhatsPopularController(getWhatsPopularUseCase, getForRentUseCase);
     }
 
     @Test
