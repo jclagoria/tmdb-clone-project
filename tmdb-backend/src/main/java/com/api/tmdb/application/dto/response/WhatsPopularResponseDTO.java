@@ -6,7 +6,7 @@ import java.util.List;
 
 public record WhatsPopularResponseDTO(
         Integer page,
-        List<WhatsPopularItemDTO> result,
+        List<WhatsPopularItemDTO> results,
         Integer totalResults
 ) {
     public static WhatsPopularResponseDTO fromDomain(WhatsPopularResponse response) {

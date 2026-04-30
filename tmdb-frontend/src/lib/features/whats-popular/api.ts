@@ -15,7 +15,7 @@ function getEndpointPath(type: WhatsPopularType): string {
         'streaming': 'streaming',
         'ontv': 'tv/on-the-air',
         'forrent': 'for-rent',
-        'intheataters': 'in-theaters'
+        'in-theaters': 'in-theaters'
     };
     return pathMap[type];
 }
@@ -46,7 +46,7 @@ export async function fetchWhatsPopular(
     }
 
     const data: WhatsPopularResponse = await response.json();
-    return data.result;
+    return data.results;
 }
 
 export function transformToMediaType(item: WhatsPopularItem): Movie {

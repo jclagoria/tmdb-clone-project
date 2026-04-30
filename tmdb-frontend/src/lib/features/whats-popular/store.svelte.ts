@@ -10,7 +10,7 @@ export function createWhatsPopularStore() {
     let error = $state<string | null>(null);
 
     const tabs = ['Streaming', 'On Tv', 'For Rent', 'In Theaters'] as const;
-    const tabValues: WhatsPopularType[] = ['streaming', 'ontv', 'forrent', 'intheataters'];
+    const tabValues: WhatsPopularType[] = ['streaming', 'ontv', 'forrent', 'in-theaters'];
 
     async function loadWhatsPopular(type: WhatsPopularType) {
         isLoading = true;
