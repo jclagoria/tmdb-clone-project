@@ -15,7 +15,7 @@ function getEndpointPath(type: WhatsPopularType): string {
         'streaming': 'streaming',
         'ontv': 'tv/on-the-air',
         'forrent': 'for-rent',
-        'intheataters': 'intheataters'
+        'intheataters': 'in-theaters'
     };
     return pathMap[type];
 }
