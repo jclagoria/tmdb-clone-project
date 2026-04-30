@@ -10,6 +10,16 @@ import type {
     WhatsPopularTvResponse
 } from "$lib/features/whats-popular/components/WhatsPopularTvItem";
 
+function getEndpointPath(type: WhatsPopularType): string {
+    const pathMap: Record<WhatsPopularType, string> = {
+        'streaming': 'streaming',
+        'ontv': 'tv/on-the-air',
+        'forrent': 'for-rent',
+        'intheataters': 'intheataters'
+    };
+    return pathMap[type];
+}
+
 export async function fetchWhatsPopular(
     type: WhatsPopularType,
     options: {
@@ -26,8 +36,9 @@ export async function fetchWhatsPopular(
         page: page.toString(),
     });
 
+    const endpointPath = getEndpointPath(type);
     const response = await fetch(
-        `${PUBLIC_CLONE_API_BASE}/whats-popular/${type}?${params.toString()}`
+        `${PUBLIC_CLONE_API_BASE}/whats-popular/${endpointPath}?${params.toString()}`
     );
 
     if (!response.ok) {
