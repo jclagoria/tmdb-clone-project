@@ -1,7 +1,7 @@
-import { mockPopular } from "$lib/data/movies";
-import { fetchWhatsPopular, transformToMediaType } from "$lib/features/whats-popular/api";
-import type { Movie } from "$lib/types/movie";
-import type { WhatsPopularType } from "$lib/features/whats-popular/components/WhatsPopularType";
+import {mockPopular} from "$lib/data/movies";
+import {fetchWhatsPopular, fetchWhatsPopularTV, transformToMediaType} from "$lib/features/whats-popular/api";
+import type {Movie} from "$lib/types/movie";
+import type {WhatsPopularType} from "$lib/features/whats-popular/components/WhatsPopularType";
 
 export function createWhatsPopularStore() {
     let activeTab = $state<WhatsPopularType>('streaming');
@@ -17,8 +17,14 @@ export function createWhatsPopularStore() {
         error = null;
 
         try {
-            const items = await fetchWhatsPopular(type);
-            movies = items.map(transformToMediaType);
+            if (type === 'ontv') {
+                // Use TV-specific endpoint
+                movies = await fetchWhatsPopularTV();
+            } else {
+                // Use existing movie endpoints
+                const items = await fetchWhatsPopular(type);
+                movies = items.map(transformToMediaType);
+            }
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to load content';
             movies = mockPopular.slice(0, 10);

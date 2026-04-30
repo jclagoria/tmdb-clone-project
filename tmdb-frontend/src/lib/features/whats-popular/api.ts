@@ -5,6 +5,10 @@ import type {
     WhatsPopularType
 } from "$lib/features/whats-popular/components/WhatsPopularType";
 import type { Movie } from "$lib/types/movie";
+import type {
+    WhatsPopularTvItem,
+    WhatsPopularTvResponse
+} from "$lib/features/whats-popular/components/WhatsPopularTvItem";
 
 export async function fetchWhatsPopular(
     type: WhatsPopularType,
@@ -52,6 +56,54 @@ export function transformToMediaType(item: WhatsPopularItem): Movie {
         original_language: item.originalLanguage,
         popularity: item.popularity,
         media_type: item.mediaType as 'movie' | 'tv',
+        adult: item.adult
+    };
+}
+
+export async function fetchWhatsPopularTV(
+    options: {
+        language?: string;
+        page?: number;
+        timezone?: string;
+    } = {}
+): Promise<Movie[]> {
+    const { language = 'en-US', page = 1 } = options;
+
+    const params = new URLSearchParams({
+        language,
+        page: page.toString(),
+    });
+
+    const response = await fetch(
+        `${PUBLIC_CLONE_API_BASE}/whats-popular/tv/on-the-air?${params.toString()}`
+    );
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    const data: WhatsPopularTvResponse = await response.json();
+    return data.results.map(transformTVToMediaType);
+}
+
+function transformTVToMediaType(item: WhatsPopularTvItem): Movie {
+    return {
+        id: item.id,
+        title: item.name,
+        original_title: item.originalName,
+        name: item.name,
+        original_name: item.originalName,
+        overview: item.overview,
+        poster_path: item.posterPath,
+        backdrop_path: item.backdropPath,
+        release_date: item.firstAirDate ?? '',
+        first_air_date: item.firstAirDate ?? '',
+        vote_average: item.voteAverage,
+        vote_count: item.voteCount,
+        genre_ids: item.genreIds,
+        original_language: item.originalLanguage,
+        popularity: item.popularity,
+        media_type: 'tv' as const,
         adult: item.adult
     };
 }
