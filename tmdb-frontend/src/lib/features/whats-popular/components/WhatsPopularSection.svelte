@@ -37,7 +37,7 @@
                     <button
                             onclick={() => handleTabClick(tab)}
                             class="pb-1 px-3 text-sm font-semibold transition cursor-pointer
-              {store.activeTab === tab.toLowerCase().replace(/\s+/g, '') ? 'tab-active' : 'tab-inactive'}"
+              {store.activeTab.replace(/-/g, '') === tab.toLowerCase().replace(/\s+/g, '') ? 'tab-active' : 'tab-inactive'}"
                     >
                         {tab}
                     </button>

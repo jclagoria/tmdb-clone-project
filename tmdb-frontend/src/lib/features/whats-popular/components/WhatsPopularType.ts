@@ -1,4 +1,4 @@
-export type WhatsPopularType = 'streaming' | 'ontv' | 'forrent' | 'intheataters';
+export type WhatsPopularType = 'streaming' | 'ontv' | 'forrent' | 'in-theaters';
 
 export interface WhatsPopularItem {
     id: number;
@@ -21,6 +21,11 @@ export interface WhatsPopularItem {
 
 export interface WhatsPopularResponse {
     page: number;
-    result: WhatsPopularItem[];
+    results: WhatsPopularItem[];
     totalResults: number;
+    totalPages?: number;
+    dates?: {
+        maximum: string;
+        minimum: string;
+    };
 }
