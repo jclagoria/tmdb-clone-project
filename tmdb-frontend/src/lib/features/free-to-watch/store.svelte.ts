@@ -1,5 +1,5 @@
 import { mockFreeToWatch } from "$lib/data/movies";
-import { fetchFreeToWatchMovies, transformToMediaType } from "./api";
+import { fetchFreeToWatchMovies, fetchFreeToWatchTVShows, transformToMediaType, transformTVToMediaType } from "./api";
 import type { Movie } from "$lib/types/movie";
 
 export type FreeToWatchTab = 'movies' | 'tv';
@@ -22,11 +22,12 @@ export function createFreeToWatchStore() {
                 const items = await fetchFreeToWatchMovies();
                 movies = items.map(transformToMediaType);
             } else {
-                movies = mockFreeToWatch.filter(m => m.media_type === 'tv').slice(0, 10);
+                const items = await fetchFreeToWatchTVShows();
+                movies = items.map(transformTVToMediaType);
             }
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to load content';
-            movies = mockFreeToWatch.filter(m => m.media_type === 'movie').slice(0, 10);
+            movies = mockFreeToWatch.filter(m => type === 'movies' ? m.media_type === 'movie' : m.media_type === 'tv').slice(0, 10);
         } finally {
             isLoading = false;
         }
