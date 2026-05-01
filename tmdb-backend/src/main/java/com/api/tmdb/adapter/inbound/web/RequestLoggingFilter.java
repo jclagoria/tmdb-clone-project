@@ -36,7 +36,7 @@ public class RequestLoggingFilter implements WebFilter {
         long startTime = System.currentTimeMillis();
         exchange.getAttributes().put(START_TIME, startTime);
 
-        log.info("""
+        log.debug("""
                 INCOMING_REQUEST: {
                   "requestId": "{}",
                   "method": "{}",
@@ -60,7 +60,7 @@ public class RequestLoggingFilter implements WebFilter {
             long duration = System.currentTimeMillis() - startTime;
             String requestIdAttr = exchange.getAttribute(REQUEST_ID);
 
-            log.info("""
+            log.debug("""
                     OUTGOING_RESPONSE: {
                       "requestId": "{}",
                       "statusCode": {},

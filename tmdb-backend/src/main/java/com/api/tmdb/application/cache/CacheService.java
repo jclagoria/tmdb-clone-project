@@ -20,31 +20,31 @@ public class CacheService {
     }
 
     public <T> Mono<T> get(String key, Class<T> type) {
-        log.info("[CACHE_GET] Attempting to get key: {}", key);
+        log.debug("[CACHE_GET] Attempting to get key: {}", key);
         return redisTemplate.opsForValue()
                 .get(key)
                 .cast(type)
-                .doOnNext(value -> log.info("[CACHE_HIT] Found in cache key: {}", key))
+                .doOnNext(value -> log.debug("[CACHE_HIT] Found in cache key: {}", key))
                 .doOnError(error -> log.error("[CACHE_ERROR] Get failed for key: {}, error: {}", key, error.getMessage()))
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("[CACHE_MISS] Key not found in cache: {}", key);
+                    log.debug("[CACHE_MISS] Key not found in cache: {}", key);
                     return Mono.empty();
                 }));
     }
 
     public Mono<Boolean> set(String key, Object value, Duration ttl) {
-        log.info("[CACHE_SET] Storing in cache key: {}, ttl: {} seconds", key, ttl.getSeconds());
+        log.debug("[CACHE_SET] Storing in cache key: {}, ttl: {} seconds", key, ttl.getSeconds());
         return redisTemplate.opsForValue()
                 .set(key, value, ttl)
-                .doOnNext(result -> log.info("[CACHE_SET_SUCCESS] Key stored: {}, result: {}", key, result))
+                .doOnNext(result -> log.debug("[CACHE_SET_SUCCESS] Key stored: {}, result: {}", key, result))
                 .doOnError(error -> log.error("[CACHE_ERROR] Set failed for key: {}, error: {}", key, error.getMessage()));
     }
 
     public Mono<Boolean> delete(String key) {
-        log.info("[CACHE_DELETE] Deleting key: {}", key);
+        log.debug("[CACHE_DELETE] Deleting key: {}", key);
         return redisTemplate.delete(key)
                 .thenReturn(true)
-                .doOnNext(result -> log.info("[CACHE_DELETE_SUCCESS] Key deleted: {}, result: {}", key, result))
+                .doOnNext(result -> log.debug("[CACHE_DELETE_SUCCESS] Key deleted: {}, result: {}", key, result))
                 .doOnError(error -> log.error("[CACHE_ERROR] Delete failed for key: {}, error: {}", key, error.getMessage()));
     }
 

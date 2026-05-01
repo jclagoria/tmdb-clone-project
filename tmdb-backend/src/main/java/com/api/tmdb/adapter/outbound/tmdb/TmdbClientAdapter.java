@@ -10,6 +10,7 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -23,7 +24,7 @@ public class TmdbClientAdapter implements TmdbClientPort {
     private final WebClient webClient;
     private final TrendingMapper trendingMapper;
 
-    public TmdbClientAdapter(WebClient webClient, TrendingMapper trendingMapper) {
+    public TmdbClientAdapter(@Qualifier("tmdbWebClient") WebClient webClient, TrendingMapper trendingMapper) {
         this.webClient = webClient;
         this.trendingMapper = trendingMapper;
     }

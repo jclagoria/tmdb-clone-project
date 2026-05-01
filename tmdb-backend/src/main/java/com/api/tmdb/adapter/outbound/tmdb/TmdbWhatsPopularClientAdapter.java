@@ -35,7 +35,7 @@ public class TmdbWhatsPopularClientAdapter implements TmdbWhatsPopularClientPort
     @RateLimiter(name = "tmdbApi")
     @Retry(name = "tmdbApi")
     public Mono<WhatsPopularResponse> discoverMovies(DiscoverParams params) {
-        log.info("Calling TMDB API: /discover/movie?sort_by={}&watch_region={}&with_watch_monetization_types={}&page={}",
+        log.debug("Calling TMDB API: /discover/movie?sort_by={}&watch_region={}&with_watch_monetization_types={}&page={}",
                 params.sortBy(), params.watchRegion(), params.withWatchMonetizationTypes(), params.page());
 
         return webClient.get()
@@ -60,7 +60,7 @@ public class TmdbWhatsPopularClientAdapter implements TmdbWhatsPopularClientPort
     @RateLimiter(name = "tmdbApi")
     @Retry(name = "tmdbApi")
     public Mono<WhatsPopularResponse> discoverTv(DiscoverParams params) {
-        log.info("Calling TMDB API: /discover/tv?sort_by={}&watch_region={}&with_watch_monetization_types={}&page={}",
+        log.debug("Calling TMDB API: /discover/tv?sort_by={}&watch_region={}&with_watch_monetization_types={}&page={}",
                 params.sortBy(), params.watchRegion(), params.withWatchMonetizationTypes(), params.page());
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
