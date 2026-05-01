@@ -1,5 +1,6 @@
 package com.api.tmdb.application.usecase;
 
+import com.api.tmdb.application.cache.CacheService;
 import com.api.tmdb.domain.model.DiscoverParams;
 import com.api.tmdb.domain.model.WhatsPopularItem;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -19,11 +21,14 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
 
     private static final Logger log = LoggerFactory.getLogger(GetWhatsPopularUseCase.class);
     private static final int MAX_ITEMS = 40;
+    private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
     private final TmdbWhatsPopularClientPort tmdbClientPort;
+    private final CacheService cacheService;
 
-    public GetWhatsPopularUseCase(TmdbWhatsPopularClientPort tmdbClientPort) {
+    public GetWhatsPopularUseCase(TmdbWhatsPopularClientPort tmdbClientPort, CacheService cacheService) {
         this.tmdbClientPort = tmdbClientPort;
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -32,16 +37,31 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
         String effectiveRegion = (region == null || region.isBlank()) ? "US" : region;
         int effectivePage = (page == null || page < 1) ? 1 : page;
 
-        DiscoverParams params = new DiscoverParams(
-                "popularity.desc",
-                effectiveRegion,
-                "flatrate",
-                effectivePage,
-                effectiveRegion,
-                false);
+        String cacheKey = buildCacheKey(effectiveLanguage, effectiveRegion, effectivePage);
 
         log.info("Executing GetWhatsPopularUseCase: region={}, language={}, page={}",
                 effectiveRegion, effectiveLanguage, effectivePage);
+
+        return cacheService.get(cacheKey, WhatsPopularResponse.class)
+                .flatMap(cached -> {
+                    log.info("Cache hit for whatsPopular: {}", cacheKey);
+                    return Mono.just(cached);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.info("Cache miss for whatsPopular: {}", cacheKey);
+                    return fetchAndCache(effectiveLanguage, effectiveRegion, effectivePage, cacheKey);
+                }))
+                .doOnError(error -> log.error("GetWhatsPopularUseCase failed: {}", error.getMessage(), error));
+    }
+
+    private Mono<WhatsPopularResponse> fetchAndCache(String language, String region, int page, String cacheKey) {
+        DiscoverParams params = new DiscoverParams(
+                "popularity.desc",
+                region,
+                "flatrate",
+                page,
+                region,
+                false);
 
         Mono<WhatsPopularResponse> moviesMono = tmdbClientPort.discoverMovies(params);
         Mono<WhatsPopularResponse> tvMono = tmdbClientPort.discoverTv(params);
@@ -60,9 +80,13 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
                     log.info("GetWhatsPopularUseCase completed: totalItems={}, returned={}",
                             allItems.size(), sorted.size());
 
-                    return new WhatsPopularResponse(effectivePage, sorted, sorted.size());
+                    return new WhatsPopularResponse(page, sorted, sorted.size());
                 })
-                .doOnError(error -> log.error("GetWhatsPopularUseCase failed: {}", error.getMessage(), error));
+                .flatMap(response -> cacheService.set(cacheKey, response, CACHE_TTL).thenReturn(response));
+    }
+
+    private String buildCacheKey(String language, String region, int page) {
+        return "whatsPopular:" + language + ":" + region + ":" + page;
     }
 
     @Override

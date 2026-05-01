@@ -5,6 +5,25 @@ spring:
   application:
     name: tmdb-backend
 
+  # Redis Cloud (dev) - Lettuce connection
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST_DEV}
+      port: ${SPRING_DATA_REDIS_PORT_DEV}
+      username: ${SPRING_DATA_REDIS_USERNAME_DEV}
+      password: ${SPRING_DATA_REDIS_PASSWORD_DEV}
+      database: ${SPRING_DATA_REDIS_DATABASE_DEV}
+      timeout: ${SPRING_DATA_REDIS_TIMEOUT_DEV}
+      client-name: ${SPRING_DATA_REDIS_CLIENT_NAME_DEV}
+      ssl:
+        enabled: ${SPRING_DATA_REDIS_SSL_ENABLED_DEV}
+      lettuce:
+        pool:
+          max-active: ${SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE_DEV}
+          max-idle: ${SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE_DEV}
+          min-idle: ${SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE_DEV}
+          max-wait: ${SPRING_DATA_REDIS_LETTUCE_POOL_MAX_WAIT_DEV}
+
 # Logging Configuration
 logging:
   level:
