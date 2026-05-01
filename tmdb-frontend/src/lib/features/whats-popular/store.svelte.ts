@@ -1,28 +1,29 @@
 import {mockPopular} from "$lib/data/movies";
 import {fetchWhatsPopular, fetchWhatsPopularTV, transformToMediaType} from "$lib/features/whats-popular/api";
 import type {Movie} from "$lib/types/movie";
-import type {WhatsPopularType} from "$lib/features/whats-popular/components/WhatsPopularType";
 
 export function createWhatsPopularStore() {
-    let activeTab = $state<WhatsPopularType>('streaming');
+    let activeTab = $state<string>('Streaming');
     let movies = $state<Movie[]>(mockPopular.slice(0, 10));
     let isLoading = $state<boolean>(false);
     let error = $state<string | null>(null);
 
     const tabs = ['Streaming', 'On Tv', 'For Rent', 'In Theaters'] as const;
-    const tabValues: WhatsPopularType[] = ['streaming', 'ontv', 'forrent', 'in-theaters'];
 
-    async function loadWhatsPopular(type: WhatsPopularType) {
+    async function loadWhatsPopular(type: string) {
+        const apiType = type === 'Streaming' ? 'streaming' 
+            : type === 'On Tv' ? 'ontv' 
+            : type === 'For Rent' ? 'forrent' 
+            : type === 'In Theaters' ? 'in-theaters' 
+            : 'streaming';
         isLoading = true;
         error = null;
 
         try {
-            if (type === 'ontv') {
-                // Use TV-specific endpoint
+            if (apiType === 'ontv') {
                 movies = await fetchWhatsPopularTV();
             } else {
-                // Use existing movie endpoints
-                const items = await fetchWhatsPopular(type);
+                const items = await fetchWhatsPopular(apiType as any);
                 movies = items.map(transformToMediaType);
             }
         } catch (e) {
@@ -34,11 +35,8 @@ export function createWhatsPopularStore() {
     }
 
     function setActiveTab(tab: string) {
-        const index = tabs.indexOf(tab as typeof tabs[number]);
-        if (index !== -1) {
-            activeTab = tabValues[index];
-            loadWhatsPopular(activeTab);
-        }
+        activeTab = tab;
+        loadWhatsPopular(activeTab);
     }
 
     return {
