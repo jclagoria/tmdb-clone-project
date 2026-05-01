@@ -39,16 +39,16 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
 
         String cacheKey = buildCacheKey(effectiveLanguage, effectiveRegion, effectivePage);
 
-        log.info("Executing GetWhatsPopularUseCase: region={}, language={}, page={}",
+        log.debug("Executing GetWhatsPopularUseCase: region={}, language={}, page={}",
                 effectiveRegion, effectiveLanguage, effectivePage);
 
         return cacheService.get(cacheKey, WhatsPopularResponse.class)
                 .flatMap(cached -> {
-                    log.info("Cache hit for whatsPopular: {}", cacheKey);
+                    log.debug("Cache hit for whatsPopular: {}", cacheKey);
                     return Mono.just(cached);
                 })
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("Cache miss for whatsPopular: {}", cacheKey);
+                    log.debug("Cache miss for whatsPopular: {}", cacheKey);
                     return fetchAndCache(effectiveLanguage, effectiveRegion, effectivePage, cacheKey);
                 }))
                 .doOnError(error -> log.error("GetWhatsPopularUseCase failed: {}", error.getMessage(), error));
@@ -77,7 +77,7 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
                             .limit(MAX_ITEMS)
                             .toList();
 
-                    log.info("GetWhatsPopularUseCase completed: totalItems={}, returned={}",
+                    log.debug("GetWhatsPopularUseCase completed: totalItems={}, returned={}",
                             allItems.size(), sorted.size());
 
                     return new WhatsPopularResponse(page, sorted, sorted.size());
@@ -91,6 +91,6 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
 
     @Override
     public Mono<WhatsPopularResponse> getForRent(String language, String region, Integer page) {
-        return null;
+        return Mono.empty();
     }
 }

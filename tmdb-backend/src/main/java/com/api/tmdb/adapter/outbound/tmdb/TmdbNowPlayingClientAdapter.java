@@ -34,7 +34,7 @@ public class TmdbNowPlayingClientAdapter implements TmdbNowPlayingPort {
     @RateLimiter(name = "tmdbApi")
     @Retry(name = "tmdbApi")
     public Mono<NowPlayingResponse> getNowPlaying(String language, String region, Integer page) {
-        log.info("Calling TMDB API: /movie/now_playing?language={}&page={}&region={}", language, page, region);
+        log.debug("Calling TMDB API: /movie/now_playing?language={}&page={}&region={}", language, page, region);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -46,7 +46,7 @@ public class TmdbNowPlayingClientAdapter implements TmdbNowPlayingPort {
                 )
                 .retrieve()
                 .bodyToMono(Object.class)
-                .doOnSuccess(response -> log.info("TMDB movie/now_playing response received"))
+                .doOnSuccess(response -> log.debug("TMDB movie/now_playing response received"))
                 .doOnError(error -> log.error("TMDB movie/now_playing call failed: {}", error.getMessage(), error))
                 .map(nowPlayingMapper::mapToNowPlayingResponse);
     }
