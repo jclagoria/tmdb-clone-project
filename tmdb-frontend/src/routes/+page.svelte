@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Hero from '$lib/components/Hero.svelte';
-    import TrendingSection from "$lib/features/components/TrendingSection.svelte";
+    import TrendingSection from "$lib/features/trending/components/TrendingSection.svelte";
     import WhatsPopularSection from "$lib/features/whats-popular/components/WhatsPopularSection.svelte";
     import FreeToWatchSection from "$lib/features/free-to-watch/components/FreeToWatchSection.svelte";
 	import Section from '$lib/components/Section.svelte';
