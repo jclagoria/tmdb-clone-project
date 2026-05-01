@@ -1,5 +1,6 @@
 package com.api.tmdb.application.usecase;
 
+import com.api.tmdb.application.cache.CacheService;
 import com.api.tmdb.domain.model.DiscoverParams;
 import com.api.tmdb.domain.model.WhatsPopularItem;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
@@ -12,9 +13,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,11 +29,14 @@ class GetWhatsPopularUseCaseTest {
     @Mock
     private TmdbWhatsPopularClientPort tmdbClientPort;
 
+    @Mock
+    private CacheService cacheService;
+
     private GetWhatsPopularUseCase getWhatsPopularUseCase;
 
     @BeforeEach
     void setUp() {
-        getWhatsPopularUseCase = new GetWhatsPopularUseCase(tmdbClientPort);
+        getWhatsPopularUseCase = new GetWhatsPopularUseCase(tmdbClientPort, cacheService);
     }
 
     @Test
@@ -48,6 +55,8 @@ class GetWhatsPopularUseCaseTest {
                 List.of("US"), false, false);
         WhatsPopularResponse tvResponse = new WhatsPopularResponse(1, List.of(tvItem), 1);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(moviesResponse));
         when(tmdbClientPort.discoverTv(any()))
@@ -78,6 +87,8 @@ class GetWhatsPopularUseCaseTest {
                 null, null, 8.0, 1000, null, false, false);
         WhatsPopularResponse tvResponse = new WhatsPopularResponse(1, List.of(highPopularity), 1);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(moviesResponse));
         when(tmdbClientPort.discoverTv(any()))
@@ -98,6 +109,8 @@ class GetWhatsPopularUseCaseTest {
                 new WhatsPopularItem(3, "TV1", "TV1", "O", null, null, "tv", "en", List.of(), 80.0, null, null, 7.0, 100, null, false, false),
                 new WhatsPopularItem(4, "TV2", "TV2", "O", null, null, "tv", "en", List.of(), 70.0, null, null, 7.0, 100, null, false, false));
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(new WhatsPopularResponse(1, movies, 2)));
         when(tmdbClientPort.discoverTv(any()))
@@ -112,6 +125,8 @@ class GetWhatsPopularUseCaseTest {
     void getWhatsPopular_shouldUseDefaultLanguage_whenNull() {
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(), 0);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(response));
         when(tmdbClientPort.discoverTv(any()))
@@ -126,6 +141,8 @@ class GetWhatsPopularUseCaseTest {
     void getWhatsPopular_shouldUseDefaultRegion_whenNull() {
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(), 0);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(response));
         when(tmdbClientPort.discoverTv(any()))
@@ -140,6 +157,8 @@ class GetWhatsPopularUseCaseTest {
     void getWhatsPopular_shouldUseDefaultPage_whenNull() {
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(), 0);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any(Duration.class))).thenReturn(Mono.just(true));
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(response));
         when(tmdbClientPort.discoverTv(any()))
@@ -152,6 +171,7 @@ class GetWhatsPopularUseCaseTest {
 
     @Test
     void getWhatsPopular_shouldReturnError_whenClientFails() {
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.error(new RuntimeException("API Error")));
         when(tmdbClientPort.discoverTv(any()))
@@ -166,6 +186,7 @@ class GetWhatsPopularUseCaseTest {
     void getWhatsPopular_shouldReturnError_whenTvClientFails() {
         WhatsPopularResponse moviesResponse = new WhatsPopularResponse(1, List.of(), 0);
 
+        when(cacheService.get(any(), any())).thenReturn(Mono.empty());
         when(tmdbClientPort.discoverMovies(any()))
                 .thenReturn(Mono.just(moviesResponse));
         when(tmdbClientPort.discoverTv(any()))
