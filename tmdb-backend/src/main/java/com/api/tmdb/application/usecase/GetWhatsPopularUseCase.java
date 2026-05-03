@@ -89,8 +89,46 @@ public class GetWhatsPopularUseCase implements WhatsPopularPort {
         return "whatsPopular:" + language + ":" + region + ":" + page;
     }
 
+    private String buildCacheKey(String language, String region, String variant, int page) {
+        return "whatsPopular:" + variant + ":" + language + ":" + region + ":" + page;
+    }
+
     @Override
     public Mono<WhatsPopularResponse> getForRent(String language, String region, Integer page) {
-        return Mono.empty();
+        String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
+        String effectiveRegion = (region == null || region.isBlank()) ? "US" : region;
+        int effectivePage = (page == null || page < 1) ? 1 : page;
+
+        String cacheKey = buildCacheKey(effectiveLanguage, effectiveRegion, "rent", effectivePage);
+
+        log.debug("Executing GetWhatsPopularUseCase.getForRent: region={}, language={}, page={}",
+                effectiveRegion, effectiveLanguage, effectivePage);
+
+        return cacheService.get(cacheKey, WhatsPopularResponse.class)
+                .flatMap(cached -> {
+                    log.debug("Cache hit for getForRent: {}", cacheKey);
+                    return Mono.just(cached);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("Cache miss for getForRent: {}", cacheKey);
+                    DiscoverParams params = new DiscoverParams(
+                            "popularity.desc",
+                            effectiveRegion,
+                            "rent",
+                            effectivePage,
+                            effectiveLanguage,
+                            false
+                    );
+
+                    return tmdbClientPort.discoverMovies(params)
+                            .flatMap(response -> {
+                                log.debug("GetWhatsPopularUseCase.getForRent completed: totalResults={}",
+                                        response.totalResults());
+                                return cacheService.set(cacheKey, response, CACHE_TTL)
+                                        .thenReturn(response);
+                            })
+                            .doOnError(error -> log.error("GetWhatsPopularUseCase.getForRent failed: {}",
+                                    error.getMessage(), error));
+                }));
     }
 }
