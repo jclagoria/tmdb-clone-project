@@ -33,21 +33,21 @@ public class GetNowPlayingUseCase implements NowPlayingPort {
 
         String cacheKey = buildCacheKey(effectiveLanguage, effectiveRegion, effectivePage);
 
-        log.info("Executing GetNowPlayingUseCase: region={}, language={}, page={}",
+        log.debug("Executing GetNowPlayingUseCase: region={}, language={}, page={}",
                 effectiveRegion, effectiveLanguage, effectivePage);
 
         return cacheService.get(cacheKey, NowPlayingResponse.class)
                 .flatMap(cached -> {
-                    log.info("Cache hit for nowPlaying: {}", cacheKey);
+                    log.debug("Cache hit for nowPlaying: {}", cacheKey);
                     return Mono.just(cached);
                 })
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("Cache miss for nowPlaying: {}", cacheKey);
+                    log.debug("Cache miss for nowPlaying: {}", cacheKey);
                     return tmdbNowPlayingPort.getNowPlaying(effectiveLanguage, effectiveRegion, effectivePage)
                             .flatMap(response -> cacheService.set(cacheKey, response, CACHE_TTL)
                                     .thenReturn(response));
                 }))
-                .doOnSuccess(response -> log.info("GetNowPlayingUseCase completed: totalResults={}", response.totalResults()))
+                .doOnSuccess(response -> log.debug("GetNowPlayingUseCase completed: totalResults={}", response.totalResults()))
                 .doOnError(error -> log.error("GetNowPlayingUseCase failed: {}", error.getMessage(), error));
     }
 

@@ -1,5 +1,6 @@
 package com.api.tmdb.application.usecase;
 
+import com.api.tmdb.application.cache.CacheService;
 import com.api.tmdb.domain.model.TvOnTheAirItem;
 import com.api.tmdb.domain.model.TvOnTheAirResponse;
 import com.api.tmdb.domain.port.outbound.TmdbTvOnTheAirPort;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,11 +26,14 @@ class GetTvOnTheAirUseCaseTest {
     @Mock
     private TmdbTvOnTheAirPort tmdbTvOnTheAirPort;
 
+    @Mock
+    private CacheService cacheService;
+
     private GetTvOnTheAirUseCase getTvOnTheAirUseCase;
 
     @BeforeEach
     void setUp() {
-        getTvOnTheAirUseCase = new GetTvOnTheAirUseCase(tmdbTvOnTheAirPort);
+        getTvOnTheAirUseCase = new GetTvOnTheAirUseCase(tmdbTvOnTheAirPort, cacheService);
     }
 
     @Test
@@ -39,6 +44,10 @@ class GetTvOnTheAirUseCaseTest {
                 "Test TV Show", "/backdrop.jpg", "/poster.jpg");
         TvOnTheAirResponse response = new TvOnTheAirResponse(1, List.of(item), 1, 1);
 
+        when(cacheService.get(any(), eq(TvOnTheAirResponse.class)))
+                .thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any()))
+                .thenReturn(Mono.empty());
         when(tmdbTvOnTheAirPort.getTvOnTheAir(any(), any(), any()))
                 .thenReturn(Mono.just(response));
 
@@ -57,6 +66,10 @@ class GetTvOnTheAirUseCaseTest {
     void getTvOnTheAir_shouldReturnEmptyList_whenNoResults() {
         TvOnTheAirResponse response = new TvOnTheAirResponse(1, List.of(), 0, 0);
 
+        when(cacheService.get(any(), eq(TvOnTheAirResponse.class)))
+                .thenReturn(Mono.empty());
+        when(cacheService.set(any(), any(), any()))
+                .thenReturn(Mono.empty());
         when(tmdbTvOnTheAirPort.getTvOnTheAir(any(), any(), any()))
                 .thenReturn(Mono.just(response));
 
@@ -67,6 +80,8 @@ class GetTvOnTheAirUseCaseTest {
 
     @Test
     void getTvOnTheAir_shouldReturnError_whenPortFails() {
+        when(cacheService.get(any(), eq(TvOnTheAirResponse.class)))
+                .thenReturn(Mono.empty());
         when(tmdbTvOnTheAirPort.getTvOnTheAir(any(), any(), any()))
                 .thenReturn(Mono.error(new RuntimeException("API Error")));
 
