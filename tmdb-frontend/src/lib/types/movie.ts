@@ -16,6 +16,7 @@ export interface Movie {
 	original_language: string;
 	popularity: number;
 	media_type: 'movie' | 'tv';
+    trailer_url?: string;
 }
 
 export interface SearchResponse {
