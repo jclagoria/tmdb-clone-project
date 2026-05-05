@@ -3,7 +3,7 @@
     import TrendingSection from "$lib/features/trending/components/TrendingSection.svelte";
     import WhatsPopularSection from "$lib/features/whats-popular/components/WhatsPopularSection.svelte";
     import FreeToWatchSection from "$lib/features/free-to-watch/components/FreeToWatchSection.svelte";
-	import Section from '$lib/components/Section.svelte';
+    import LatestTrailersSection from "$lib/components/LatestTrailersSection.svelte";
 	import { mockMovies } from '$lib/data/movies';
 
 	let trailersActiveTab = $state('popular');
@@ -23,13 +23,7 @@
 
 <TrendingSection />
 
-<Section
-	title="Latest Trailers"
-	tabs={trailersTabs}
-	bind:activeTab={trailersActiveTab}
-	movies={trailersMovies}
-	icon="play"
-/>
+<LatestTrailersSection />
 
 <WhatsPopularSection />
 
