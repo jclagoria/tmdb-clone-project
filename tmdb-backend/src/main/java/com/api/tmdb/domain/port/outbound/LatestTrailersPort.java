@@ -1,4 +1,4 @@
-package com.api.tmdb.domain.port.inbound;
+package com.api.tmdb.domain.port.outbound;
 
 import com.api.tmdb.domain.model.LatestTrailerResponse;
 import reactor.core.publisher.Mono;

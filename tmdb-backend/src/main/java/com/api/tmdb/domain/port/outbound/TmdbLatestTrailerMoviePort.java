@@ -1,4 +1,4 @@
-package com.api.tmdb.adapter.outbound.tmdb;
+package com.api.tmdb.domain.port.outbound;
 
 import com.api.tmdb.domain.model.LatestTrailerResponse;
 import com.api.tmdb.domain.model.VideoItem;

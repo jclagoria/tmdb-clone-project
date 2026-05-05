@@ -1,4 +1,7 @@
 package com.api.tmdb.domain.model;
 
-public record EpisodeInfo() {
+public record EpisodeInfo(
+        Integer seasonNumber,
+        Integer episodeNumber
+) {
 }

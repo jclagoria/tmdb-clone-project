@@ -1,4 +1,10 @@
 package com.api.tmdb.domain.model;
 
-public record LatestTrailerResponse() {
+import java.util.List;
+
+public record LatestTrailerResponse(
+        Integer page,
+        List<LatestTrailerItem> results,
+        Integer totalResults
+) {
 }
