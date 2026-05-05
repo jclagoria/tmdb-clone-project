@@ -29,6 +29,7 @@ logging:
   level:
     root: INFO
     com.api.tmdb: INFO
+    com.api.tmdb.adapter.outbound.tmdb: INFO
     reactor: WARN
     io.github.resilience4j: WARN
     org.springframework: WARN
