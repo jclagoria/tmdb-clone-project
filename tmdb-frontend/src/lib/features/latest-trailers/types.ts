@@ -1,3 +1,11 @@
+export interface VideoResult {
+    videoKey: string | null;
+    videoSite: string | null;
+    videoType: string | null;
+    videoOfficial: boolean | null;
+    videoUrl: string | null;
+}
+
 export interface LatestTrailerItem {
     id: number;
     title: string;
@@ -11,13 +19,11 @@ export interface LatestTrailerItem {
     releaseDate: string | null;
     originalLanguage: string;
     genreIds: number[];
-    mediaType: string;              // API sends "MOVIE" or "TV" (uppercase)
+    mediaType: string;
     originCountry: string | null;
-    videoKey: string | null;        // FLAT fields, NOT nested
-    videoSite: string | null;
-    videoType: string | null;
-    videoOfficial: boolean | null;
-    videoUrl: string | null;
+    videos: {
+        results: VideoResult[];
+    };
 }
 
 export interface LatestTrailerResponse {

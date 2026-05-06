@@ -2,6 +2,7 @@ package com.api.tmdb.application.dto.response;
 
 import com.api.tmdb.domain.model.LatestTrailerItem;
 
+import java.util.Collections;
 import java.util.List;
 
 public record LatestTrailersItemDTO(
@@ -19,16 +20,23 @@ public record LatestTrailersItemDTO(
         List<Integer> genreIds,
         String mediaType,
         List<String> originCountry,
-        String videoKey,
-        String videoSite,
-        String videoType,
-        Boolean videoOfficial,
-        String videoUrl
+        VideosWrapperDTO videos
 ) {
     public static LatestTrailersItemDTO fromDomain(LatestTrailerItem item) {
-        String videoUrl = null;
-        if (item.videoKey() != null && "Youtube".equals(item.videoSite())) {
-            videoUrl = "https://www.youtube.com/watch?v=" + item.videoKey();
+        List<VideoResultDTO> results;
+        if (item.videoKey() != null && item.videoSite() != null) {
+            String videoUrl = "YouTube".equalsIgnoreCase(item.videoSite())
+                    ? "https://www.youtube.com/watch?v=" + item.videoKey()
+                    : null;
+            results = List.of(new VideoResultDTO(
+                    item.videoKey(),
+                    item.videoSite(),
+                    item.videoType(),
+                    item.videoOfficial(),
+                    videoUrl
+            ));
+        } else {
+            results = Collections.emptyList();
         }
 
         String mediaTypeStr = item.mediaType() != null
@@ -49,11 +57,17 @@ public record LatestTrailersItemDTO(
                 item.genreIds(),
                 mediaTypeStr,
                 item.originCountry(),
-                item.videoKey(),
-                item.videoSite(),
-                item.videoType(),
-                item.videoOfficial(),
-                videoUrl
+                new VideosWrapperDTO(results)
         );
     }
+
+    record VideosWrapperDTO(List<VideoResultDTO> results) {}
+
+    record VideoResultDTO(
+            String videoKey,
+            String videoSite,
+            String videoType,
+            Boolean videoOfficial,
+            String videoUrl
+    ) {}
 }

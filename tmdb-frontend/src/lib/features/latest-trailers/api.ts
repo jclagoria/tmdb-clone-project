@@ -18,9 +18,12 @@ export async function fetchLatestTrailersPopular(
 }
 
 export function transformToMovie(item: LatestTrailerItem): Movie {
-    const trailerUrl = item.videoKey && item.videoSite === 'YouTube' && item.videoType === 'Trailer'
-        ? `https://www.youtube.com/watch?v=${item.videoKey}`
-        : undefined;
+    const videos = item.videos?.results || [];
+    const trailer = videos.find(v => v.videoSite === 'YouTube' && v.videoType === 'Trailer');
+    
+    const trailerUrl = trailer?.videoUrl 
+        || (trailer?.videoKey ? `https://www.youtube.com/watch?v=${trailer.videoKey}` : undefined);
+    
     return {
         id: item.id,
         title: item.title,
