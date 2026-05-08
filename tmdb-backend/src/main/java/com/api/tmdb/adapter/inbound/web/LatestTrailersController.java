@@ -1,6 +1,7 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.LatestTrailersResponseDTO;
+import com.api.tmdb.application.usecase.GetLatestTrailersForRentUseCase;
 import com.api.tmdb.application.usecase.GetLatestTrailersPopularUseCase;
 import com.api.tmdb.application.usecase.GetLatestTrailersStreamingUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -26,13 +27,16 @@ public class LatestTrailersController {
     private static final Logger log = LoggerFactory.getLogger(LatestTrailersController.class);
     private final GetLatestTrailersPopularUseCase useCase;
     private final GetLatestTrailersStreamingUseCase streamingUseCase;
+    private final GetLatestTrailersForRentUseCase forRentUseCase;
 
     public LatestTrailersController(
             GetLatestTrailersPopularUseCase useCase,
-            GetLatestTrailersStreamingUseCase streamingUseCase
+            GetLatestTrailersStreamingUseCase streamingUseCase,
+            GetLatestTrailersForRentUseCase forRentUseCase
     ) {
         this.useCase = useCase;
         this.streamingUseCase = streamingUseCase;
+        this.forRentUseCase = forRentUseCase;
     }
 
     @GetMapping("/popular")
@@ -74,6 +78,29 @@ public class LatestTrailersController {
         log.info("LatestTrailersStreaming request: language={}, watchRegion={}", language, watchRegion);
 
         Mono<LatestTrailersResponseDTO> response = streamingUseCase.getStreaming(language, watchRegion)
+                .map(LatestTrailersResponseDTO::fromDomain);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/for-rent")
+    @Operation(
+            summary = "Get movies for rent with latest trailers",
+            description = "Get top 20 movies available for rent with trailers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public ResponseEntity<Mono<LatestTrailersResponseDTO>> getForRent(
+            @Parameter(description = "Language code (e.g., en-US)")
+            @RequestParam(name = "language", defaultValue = "en-US") String language,
+            @Parameter(description = "Watch region ISO code (e.g., US)")
+            @RequestParam(name = "watch_region", defaultValue = "US") String watchRegion) {
+
+        log.info("LatestTrailersForRent request: language={}, watchRegion={}", language, watchRegion);
+
+        Mono<LatestTrailersResponseDTO> response = forRentUseCase.getForRent(language, watchRegion)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
