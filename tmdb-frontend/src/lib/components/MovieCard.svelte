@@ -22,10 +22,13 @@
 	<div class="relative rounded-lg overflow-hidden poster-placeholder aspect-[2/3]">
 		{#if posterUrl}
 			<img 
-				src={posterUrl} 
+				srcset="{getImageUrl(movie.poster_path, 'w342')} 342w, {getImageUrl(movie.poster_path, 'w500')} 500w"
+				sizes="(max-width: 768px) 160px, 180px"
+				src={posterUrl}
 				alt={title}
-				class="w-full h-full object-cover"
 				loading="lazy"
+				decoding="async"
+				class="w-full h-full object-cover"
 			/>
 		{:else}
 			<div class="w-full h-full flex items-center justify-center text-4xl text-gray-600">
