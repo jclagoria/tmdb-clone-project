@@ -23,6 +23,10 @@ export async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>):
 	return promise;
 }
 
+export function createFetchController(): AbortController {
+	return new AbortController();
+}
+
 export function getImageUrl(path: string | null, size: string = 'w500'): string | null {
 	if (!path) return null;
 	return `${IMAGE_BASE}/${size}${path}`;
@@ -86,11 +90,11 @@ export async function searchMovies(query: string): Promise<SearchResponse> {
 	return fetchWithAuth(`/search/multi?query=${encodeURIComponent(query)}`) as Promise<SearchResponse>;
 }
 
-async function fetchWithAuth<T>(endpoint: string): Promise<T> {
+async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
 	if (!apiKey) {
 		throw new Error('API key not set');
 	}
-	const response = await fetch(`${API_BASE}${endpoint}?api_key=${apiKey}`);
+	const response = await fetch(`${API_BASE}${endpoint}?api_key=${apiKey}`, { signal });
 	if (!response.ok) {
 		throw new Error(`API error: ${response.status}`);
 	}

@@ -31,6 +31,10 @@ export function createTrendingStore() {
         loadTrending(activeTab);
     }
 
+    function clearError() {
+        error = null;
+    }
+
     return {
         get activeTab() { return activeTab; },
         get movies() { return movies; },
@@ -39,5 +43,6 @@ export function createTrendingStore() {
         get tabs() { return tabs; },
         setActiveTab,
         loadTrending: () => loadTrending(activeTab),
+        clearError,
     };
 }

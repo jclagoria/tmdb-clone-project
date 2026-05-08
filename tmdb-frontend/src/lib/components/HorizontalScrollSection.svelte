@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MovieCard from '$lib/components/MovieCard.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
 	let {
 		title,
@@ -21,6 +22,12 @@
 	} = $props();
 
 	let scrollContainer: HTMLDivElement | null = $state(null);
+	let visibleItems = $state<Set<number>>(new Set());
+	let observer: IntersectionObserver | null = null;
+
+	function isActive(tab: string): boolean {
+		return activeTab?.toLowerCase() === tab.toLowerCase();
+	}
 
 	function scroll(direction: 'left' | 'right') {
 		scrollContainer?.scrollBy({
@@ -29,8 +36,30 @@
 		});
 	}
 
-	function isActive(tab: string): boolean {
-		return activeTab?.toLowerCase() === tab.toLowerCase();
+	onMount(() => {
+		observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					const id = Number(entry.target.getAttribute('data-movie-id'));
+					if (entry.isIntersecting) {
+						visibleItems.add(id);
+						visibleItems = new Set(visibleItems);
+					}
+				});
+			},
+			{ root: scrollContainer, rootMargin: '100px' }
+		);
+
+		return () => observer?.disconnect();
+	});
+
+	function observeCard(node: HTMLDivElement, movieId: number) {
+		observer?.observe(node);
+		return {
+			destroy() {
+				observer?.unobserve(node);
+			}
+		};
 	}
 </script>
 
@@ -71,7 +100,9 @@
 
 				<div bind:this={scrollContainer} class="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
 					{#each films as movie (movie.id)}
-						<MovieCard {movie} />
+						<div use:observeCard={movie.id} data-movie-id={movie.id} class="flex-shrink-0">
+							<MovieCard {movie} />
+						</div>
 					{/each}
 				</div>
 
