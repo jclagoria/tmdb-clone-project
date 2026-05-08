@@ -86,33 +86,33 @@
 		</div>
 
 		<div class="relative">
-			{#if isLoading}
+			{#if isLoading && films.length === 0}
 				<div class="flex justify-center py-12">
 					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-tmdb-light"></div>
 				</div>
-			{:else}
-				<button
-					onclick={() => scroll('left')}
-					class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
-				>
-					<ChevronLeft class="w-6 h-6" />
-				</button>
-
-				<div bind:this={scrollContainer} class="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
-					{#each films as movie (movie.id)}
-						<div use:observeCard={movie.id} data-movie-id={movie.id} class="flex-shrink-0">
-							<MovieCard {movie} />
-						</div>
-					{/each}
-				</div>
-
-				<button
-					onclick={() => scroll('right')}
-					class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
-				>
-					<ChevronRight class="w-6 h-6" />
-				</button>
 			{/if}
+
+			<button
+				onclick={() => scroll('left')}
+				class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
+			>
+				<ChevronLeft class="w-6 h-6" />
+			</button>
+
+			<div bind:this={scrollContainer} class="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
+				{#each films as movie (movie.id)}
+					<div use:observeCard={movie.id} data-movie-id={movie.id} class="flex-shrink-0">
+						<MovieCard {movie} />
+					</div>
+				{/each}
+			</div>
+
+			<button
+				onclick={() => scroll('right')}
+				class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
+			>
+				<ChevronRight class="w-6 h-6" />
+			</button>
 		</div>
 	</div>
 </section>

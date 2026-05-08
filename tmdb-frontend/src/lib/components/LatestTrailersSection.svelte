@@ -63,11 +63,11 @@
             </div>
         </div>
 
-        {#if store.isLoading}
+        {#if store.isLoading && store.movies.length === 0}
             <div class="flex justify-center py-12">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
             </div>
-        {:else if store.error}
+        {:else if store.error && store.movies.length === 0}
             <div class="text-center py-12 text-red-400">
                 <p>{store.error}</p>
             </div>
