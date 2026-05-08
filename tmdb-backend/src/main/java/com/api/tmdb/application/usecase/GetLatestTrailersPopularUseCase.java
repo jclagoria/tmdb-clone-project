@@ -134,7 +134,6 @@ public class GetLatestTrailersPopularUseCase implements LatestTrailersPort {
     private LatestTrailerItem enrichWithVideo(LatestTrailerItem item, List<VideoItem> videos) {
         Optional<VideoItem> bestVideo = videos.stream()
                 .filter(v -> "YouTube".equalsIgnoreCase(v.site()))
-                .filter(v -> v.official() != null && v.official())
                 .filter(v -> {
                     String type = v.type();
                     return "Trailer".equals(type) || "Teaser".equals(type) || "Featurette".equals(type);
