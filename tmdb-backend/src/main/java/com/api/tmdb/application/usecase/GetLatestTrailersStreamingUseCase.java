@@ -1,9 +1,7 @@
 package com.api.tmdb.application.usecase;
 
 import com.api.tmdb.application.cache.CacheService;
-import com.api.tmdb.domain.model.LatestTrailerItem;
-import com.api.tmdb.domain.model.LatestTrailerResponse;
-import com.api.tmdb.domain.model.VideoItem;
+import com.api.tmdb.domain.model.*;
 import com.api.tmdb.domain.model.enums.MediaType;
 import com.api.tmdb.domain.port.inbound.LatestTrailersStreamingPort;
 import com.api.tmdb.domain.port.outbound.TmdbStreamingPort;
@@ -13,19 +11,16 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamingPort {
 
     private static final Logger log = LoggerFactory.getLogger(GetLatestTrailersStreamingUseCase.class);
     private static final int MOVIE_LIMIT = 20;
+    private static final int TV_LIMIT = 20;
     private static final int FINAL_LIMIT = 20;
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
-    private static final int MAX_VIDEO_PARALLEL = 10;
 
     private final TmdbStreamingPort streamingPort;
     private final CacheService cacheService;
@@ -48,18 +43,35 @@ public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamin
     }
 
     private Mono<LatestTrailerResponse> fetchAndCache(String language, String watchRegion, String cacheKey) {
-        log.debug("Fetching streaming movies: language={}, watchRegion={}", language, watchRegion);
+        log.debug("Fetching streaming content: language={}, watchRegion={}", language, watchRegion);
 
-        return streamingPort.getStreamingMovies(language, 1, watchRegion)
-                .map(response -> processItems(response.results(), MOVIE_LIMIT))
-                .flatMap(items -> fetchVideos(items, language))
+        Mono<List<LatestTrailerItem>> moviesMono = streamingPort.getStreamingMovies(language, 1, watchRegion)
+                .map(response -> processItems(response.results(), MediaType.MOVIE, MOVIE_LIMIT));
+
+        Mono<List<LatestTrailerItem>> tvShowsMono = streamingPort.getStreamingTv(language, 1, watchRegion)
+                .map(response -> processItems(response.results(), MediaType.TV, TV_LIMIT));
+
+        return Mono.zip(moviesMono, tvShowsMono)
+                .flatMap(tuple -> {
+                    List<LatestTrailerItem> merged = new ArrayList<>();
+                    merged.addAll(tuple.getT1());
+                    merged.addAll(tuple.getT2());
+
+                    List<LatestTrailerItem> deduplicated = deduplicate(merged);
+                    List<LatestTrailerItem> sorted = deduplicated.stream()
+                            .sorted(Comparator.comparingDouble(LatestTrailerItem::popularity).reversed())
+                            .limit(FINAL_LIMIT)
+                            .toList();
+
+                    return fetchVideos(sorted, language);
+                })
                 .flatMap(response ->
                         cacheService.set(cacheKey, response, CACHE_TTL)
                                 .thenReturn(response)
                 );
     }
 
-    private List<LatestTrailerItem> processItems(List<LatestTrailerItem> items, int limit) {
+    private List<LatestTrailerItem> processItems(List<LatestTrailerItem> items, MediaType mediaType, int limit) {
         return items.stream()
                 .limit(limit)
                 .map(item -> new LatestTrailerItem(
@@ -75,10 +87,17 @@ public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamin
                         item.originalTitle(),
                         item.originalLanguage(),
                         item.genreIds(),
-                        MediaType.MOVIE,
+                        mediaType,
                         item.originCountry(),
                         null, null, null, null, null, null
                 ))
+                .toList();
+    }
+
+    private List<LatestTrailerItem> deduplicate(List<LatestTrailerItem> items) {
+        Set<Integer> seenIds = new HashSet<>();
+        return items.stream()
+                .filter(item -> seenIds.add(item.id()))
                 .toList();
     }
 
@@ -98,12 +117,71 @@ public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamin
     }
 
     private Mono<LatestTrailerItem> fetchVideoForItem(LatestTrailerItem item, String language) {
+        if (item.mediaType() == MediaType.MOVIE) {
+            return fetchMovieVideo(item, language);
+        } else {
+            return fetchTvVideo(item, language);
+        }
+    }
+
+    private Mono<LatestTrailerItem> fetchMovieVideo(LatestTrailerItem item, String language) {
         return streamingPort.getMovieVideos(item.id(), language)
                 .map(videos -> enrichWithVideo(item, videos))
                 .onErrorResume(e -> {
                     log.warn("Failed to fetch video for movie {}: {}", item.id(), e.getMessage());
                     return Mono.just(item);
                 });
+    }
+
+    private Mono<LatestTrailerItem> fetchTvVideo(LatestTrailerItem item, String language) {
+        return streamingPort.getTvDetails(item.id(), language)
+                .flatMap(details -> fetchTvVideosChain(item, details, language))
+                .onErrorResume(e -> {
+                    log.warn("Failed to fetch TV details for {}: {}", item.id(), e.getMessage());
+                    return Mono.just(item);
+                });
+    }
+
+    private Mono<LatestTrailerItem> fetchTvVideosChain(LatestTrailerItem item, TvSeriesDetails details, String language) {
+        EpisodeInfo episodeInfo = getPreferredEpisode(details);
+
+        if (episodeInfo == null) {
+            log.debug("No episode info available for TV {}", item.id());
+            return Mono.just(item);
+        }
+
+        return streamingPort.getTvSeasonEpisodeVideos(
+                        item.id(),
+                        episodeInfo.seasonNumber(),
+                        episodeInfo.episodeNumber(),
+                        language)
+                .flatMap(videos -> {
+                    if (!videos.isEmpty()) {
+                        return Mono.just(enrichWithVideo(item, videos));
+                    }
+                    return fallbackToSeasonVideos(item, episodeInfo.seasonNumber(), language);
+                })
+                .switchIfEmpty(Mono.defer(() -> fallbackToSeasonVideos(item, episodeInfo.seasonNumber(), language)))
+                .onErrorResume(e -> {
+                    log.warn("Failed to fetch TV videos for {}: {}", item.id(), e.getMessage());
+                    return Mono.just(item);
+                });
+    }
+
+    private EpisodeInfo getPreferredEpisode(TvSeriesDetails details) {
+        if (details.nextEpisodeToAir() != null) {
+            return details.nextEpisodeToAir();
+        }
+        if (details.lastEpisodeToAir() != null) {
+            return details.lastEpisodeToAir();
+        }
+        return null;
+    }
+
+    private Mono<LatestTrailerItem> fallbackToSeasonVideos(LatestTrailerItem item, Integer seasonNumber, String language) {
+        return streamingPort.getTvSeasonVideos(item.id(), seasonNumber, language)
+                .map(videos -> enrichWithVideo(item, videos))
+                .switchIfEmpty(Mono.just(item));
     }
 
     private LatestTrailerItem enrichWithVideo(LatestTrailerItem item, List<VideoItem> videos) {
@@ -113,14 +191,12 @@ public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamin
                 .filter(v -> {
                     String type = v.type();
                     return "Trailer".equals(type) || "Teaser".equals(type) || "Featurette".equals(type);
-                })
-                .sorted(Comparator.comparingInt(v -> {
+                }).min(Comparator.comparingInt(v -> {
                     String type = v.type();
                     if ("Trailer".equals(type)) return 0;
                     if ("Teaser".equals(type)) return 1;
                     return 2;
-                }))
-                .findFirst();
+                }));
 
         if (bestVideo.isPresent()) {
             VideoItem video = bestVideo.get();
