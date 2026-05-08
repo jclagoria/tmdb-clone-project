@@ -18,7 +18,7 @@
 	);
 
 	function handleSearch(query: string) {
-		console.log('Search query:', query);
+		// Search functionality to be implemented
 	}
 
 	onMount(async () => {
