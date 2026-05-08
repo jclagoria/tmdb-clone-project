@@ -7,6 +7,9 @@
 
     $effect(() => {
         store.loadWhatsPopular();
+        return () => {
+            // Cleanup if needed
+        };
     });
 
     function handleTabClick(tab: string) {

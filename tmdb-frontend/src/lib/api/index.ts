@@ -7,9 +7,58 @@ const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 let apiKey = '';
 let mockMode = true;
 
+const CACHE_TTL = 5 * 60 * 1000;
+const MAX_CACHE_SIZE = 50;
+
+interface CacheEntry<T> {
+	promise: Promise<T>;
+	timestamp: number;
+}
+
+const requestCache = new Map<string, CacheEntry<any>>();
+
+function cleanExpiredCache() {
+	const now = Date.now();
+	for (const [k, v] of requestCache) {
+		if (now - v.timestamp > CACHE_TTL) {
+			requestCache.delete(k);
+		}
+	}
+}
+
+function enforceMaxSize() {
+	if (requestCache.size >= MAX_CACHE_SIZE) {
+		const firstKey = requestCache.keys().next().value;
+		if (firstKey) {
+			requestCache.delete(firstKey);
+		}
+	}
+}
+
 export function setApiKey(key: string) {
 	apiKey = key;
 	mockMode = false;
+}
+
+export async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+	cleanExpiredCache();
+	enforceMaxSize();
+
+	if (requestCache.has(key)) {
+		const entry = requestCache.get(key);
+		if (entry && Date.now() - entry.timestamp <= CACHE_TTL) {
+			return entry.promise;
+		}
+		requestCache.delete(key);
+	}
+
+	const promise = fetcher();
+	requestCache.set(key, { promise, timestamp: Date.now() });
+	return promise;
+}
+
+export function createFetchController(): AbortController {
+	return new AbortController();
 }
 
 export function getImageUrl(path: string | null, size: string = 'w500'): string | null {
@@ -75,11 +124,11 @@ export async function searchMovies(query: string): Promise<SearchResponse> {
 	return fetchWithAuth(`/search/multi?query=${encodeURIComponent(query)}`) as Promise<SearchResponse>;
 }
 
-async function fetchWithAuth<T>(endpoint: string): Promise<T> {
+async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
 	if (!apiKey) {
 		throw new Error('API key not set');
 	}
-	const response = await fetch(`${API_BASE}${endpoint}?api_key=${apiKey}`);
+	const response = await fetch(`${API_BASE}${endpoint}?api_key=${apiKey}`, { signal });
 	if (!response.ok) {
 		throw new Error(`API error: ${response.status}`);
 	}

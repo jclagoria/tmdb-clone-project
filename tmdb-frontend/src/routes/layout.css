@@ -142,9 +142,10 @@
 }
 
 .hero-backdrop {
+	content-visibility: auto;
 	background: linear-gradient(to top, #0d253f 0%, transparent 50%),
 				linear-gradient(to right, rgba(13,37,63,0.9) 0%, transparent 60%),
-				url('https://image.tmdb.org/t/p/original/zk7GaDb2y1xNyKx84dQqHg9O3sK.jpg') center/cover;
+				url('https://image.tmdb.org/t/p/original/zk7GaDb2y1xNyK84dQqHg9O3sK.jpg') center/cover;
 }
 
 .section-backdrop {
@@ -152,6 +153,7 @@
 }
 
 .card-hover {
+	will-change: transform, box-shadow;
 	transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 

@@ -42,7 +42,7 @@
 	const IconComponent = $derived(iconMap[icon] || TrendingUp);
 </script>
 
-<section class="section-backdrop py-8 px-4">
+<section class="section-backdrop py-8 px-4" style="content-visibility: auto;">
 	<div class="max-w-7xl mx-auto">
 		<div class="flex items-center justify-between mb-6">
 			<h2 class="text-2xl font-bold text-white flex items-center gap-2">

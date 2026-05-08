@@ -1,5 +1,6 @@
 import {mockPopular} from "$lib/data/movies";
 import {fetchWhatsPopular, fetchWhatsPopularTV, transformToMediaType} from "$lib/features/whats-popular/api";
+import { fetchWithCache } from "$lib/api";
 import type {Movie} from "$lib/types/movie";
 
 export function createWhatsPopularStore() {
@@ -16,14 +17,15 @@ export function createWhatsPopularStore() {
             : type === 'For Rent' ? 'forrent' 
             : type === 'In Theaters' ? 'in-theaters' 
             : 'streaming';
+        const cacheKey = `whats-popular-${apiType}`;
         isLoading = true;
         error = null;
 
         try {
             if (apiType === 'ontv') {
-                movies = await fetchWhatsPopularTV();
+                movies = await fetchWithCache(cacheKey, () => fetchWhatsPopularTV());
             } else {
-                const items = await fetchWhatsPopular(apiType as any);
+                const items = await fetchWithCache(cacheKey, () => fetchWhatsPopular(apiType as any));
                 movies = items.map(transformToMediaType);
             }
         } catch (e) {

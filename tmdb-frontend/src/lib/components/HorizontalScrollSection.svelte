@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MovieCard from '$lib/components/MovieCard.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
 	let {
 		title,
@@ -21,6 +22,12 @@
 	} = $props();
 
 	let scrollContainer: HTMLDivElement | null = $state(null);
+	let visibleItems = $state<Set<number>>(new Set());
+	let observer: IntersectionObserver | null = null;
+
+	function isActive(tab: string): boolean {
+		return activeTab?.toLowerCase() === tab.toLowerCase();
+	}
 
 	function scroll(direction: 'left' | 'right') {
 		scrollContainer?.scrollBy({
@@ -29,12 +36,34 @@
 		});
 	}
 
-	function isActive(tab: string): boolean {
-		return activeTab?.toLowerCase() === tab.toLowerCase();
+	onMount(() => {
+		observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					const id = Number(entry.target.getAttribute('data-movie-id'));
+					if (entry.isIntersecting) {
+						visibleItems.add(id);
+						visibleItems = new Set(visibleItems);
+					}
+				});
+			},
+			{ root: scrollContainer, rootMargin: '100px' }
+		);
+
+		return () => observer?.disconnect();
+	});
+
+	function observeCard(node: HTMLDivElement, movieId: number) {
+		observer?.observe(node);
+		return {
+			destroy() {
+				observer?.unobserve(node);
+			}
+		};
 	}
 </script>
 
-<section class="section-backdrop py-8 px-4">
+<section class="section-backdrop py-8 px-4" style="content-visibility: auto;">
 	<div class="max-w-7xl mx-auto">
 		<div class="flex items-center justify-between mb-6">
 			<h2 class="text-2xl font-bold text-white flex items-center gap-2">
@@ -57,31 +86,33 @@
 		</div>
 
 		<div class="relative">
-			{#if isLoading}
+			{#if isLoading && films.length === 0}
 				<div class="flex justify-center py-12">
 					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-tmdb-light"></div>
 				</div>
-			{:else}
-				<button
-					onclick={() => scroll('left')}
-					class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
-				>
-					<ChevronLeft class="w-6 h-6" />
-				</button>
-
-				<div bind:this={scrollContainer} class="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
-					{#each films as movie (movie.id)}
-						<MovieCard {movie} />
-					{/each}
-				</div>
-
-				<button
-					onclick={() => scroll('right')}
-					class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
-				>
-					<ChevronRight class="w-6 h-6" />
-				</button>
 			{/if}
+
+			<button
+				onclick={() => scroll('left')}
+				class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
+			>
+				<ChevronLeft class="w-6 h-6" />
+			</button>
+
+			<div bind:this={scrollContainer} class="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
+				{#each films as movie (movie.id)}
+					<div use:observeCard={movie.id} data-movie-id={movie.id} class="flex-shrink-0">
+						<MovieCard {movie} />
+					</div>
+				{/each}
+			</div>
+
+			<button
+				onclick={() => scroll('right')}
+				class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 hidden md:flex"
+			>
+				<ChevronRight class="w-6 h-6" />
+			</button>
 		</div>
 	</div>
 </section>
