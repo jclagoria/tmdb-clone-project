@@ -1,7 +1,8 @@
-package com.api.tmdb.adapter.inbound;
+package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.LatestTrailersResponseDTO;
 import com.api.tmdb.application.usecase.GetLatestTrailersPopularUseCase;
+import com.api.tmdb.application.usecase.GetLatestTrailersStreamingUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,9 +25,14 @@ public class LatestTrailersController {
 
     private static final Logger log = LoggerFactory.getLogger(LatestTrailersController.class);
     private final GetLatestTrailersPopularUseCase useCase;
+    private final GetLatestTrailersStreamingUseCase streamingUseCase;
 
-    public LatestTrailersController(GetLatestTrailersPopularUseCase useCase) {
+    public LatestTrailersController(
+            GetLatestTrailersPopularUseCase useCase,
+            GetLatestTrailersStreamingUseCase streamingUseCase
+    ) {
         this.useCase = useCase;
+        this.streamingUseCase = streamingUseCase;
     }
 
     @GetMapping("/popular")
@@ -45,6 +51,29 @@ public class LatestTrailersController {
         log.info("LatestTrailersPopular request: language={}", language);
 
         Mono<LatestTrailersResponseDTO> response = useCase.getPopular(language)
+                .map(LatestTrailersResponseDTO::fromDomain);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/streaming")
+    @Operation(
+            summary = "Get streaming latest trailers",
+            description = "Get top 20 movies available on streaming platforms with trailers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public ResponseEntity<Mono<LatestTrailersResponseDTO>> getStreaming(
+            @Parameter(description = "Language code (e.g., en-US)")
+            @RequestParam(name = "language", defaultValue = "en-US") String language,
+            @Parameter(description = "Watch region ISO code (e.g., US)")
+            @RequestParam(name = "watch_region", defaultValue = "US") String watchRegion) {
+
+        log.info("LatestTrailersStreaming request: language={}, watchRegion={}", language, watchRegion);
+
+        Mono<LatestTrailersResponseDTO> response = streamingUseCase.getStreaming(language, watchRegion)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
