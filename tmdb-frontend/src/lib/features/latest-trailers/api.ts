@@ -17,6 +17,22 @@ export async function fetchLatestTrailersPopular(
     return data.results;
 }
 
+export async function fetchLatestTrailersStreaming(
+    language: string = 'en-US',
+    watchRegion: string = 'US'
+): Promise<LatestTrailerItem[]> {
+    const response = await fetch(
+        `${PUBLIC_CLONE_API_BASE}/latest-trailers/streaming?language=${language}&watch_region=${watchRegion}`
+    );
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    const data: LatestTrailerResponse = await response.json();
+    return data.results;
+}
+
 export function transformToMovie(item: LatestTrailerItem): Movie {
     const videos = item.videos?.results || [];
     const trailer = videos.find(v => v.videoSite === 'YouTube' && v.videoType === 'Trailer');
