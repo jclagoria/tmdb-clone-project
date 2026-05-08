@@ -1,4 +1,4 @@
-import { fetchLatestTrailersPopular, fetchLatestTrailersStreaming, fetchLatestTrailersForRent, transformToMovie } from "$lib/features/latest-trailers/api";
+import { fetchLatestTrailersPopular, fetchLatestTrailersStreaming, fetchLatestTrailersForRent, fetchLatestTrailersInTheaters, transformToMovie } from "$lib/features/latest-trailers/api";
 import type { LatestTrailerItem } from "$lib/features/latest-trailers/types";
 import type { Movie } from "$lib/types/movie";
 
@@ -25,6 +25,9 @@ export function createLatestTrailersStore() {
                     break;
                 case 'forrent':
                     items = await fetchLatestTrailersForRent();
+                    break;
+                case 'intheaters':
+                    items = await fetchLatestTrailersInTheaters();
                     break;
                 case 'popular':
                 default:

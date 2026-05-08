@@ -49,6 +49,21 @@ export async function fetchLatestTrailersForRent(
     return data.results;
 }
 
+export async function fetchLatestTrailersInTheaters(
+    language: string = 'en-US'
+): Promise<LatestTrailerItem[]> {
+    const response = await fetch(
+        `${PUBLIC_CLONE_API_BASE}/latest-trailers/in-theaters?language=${language}`
+    );
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    const data: LatestTrailerResponse = await response.json();
+    return data.results;
+}
+
 export function transformToMovie(item: LatestTrailerItem): Movie {
     const videos = item.videos?.results || [];
     const trailer = videos.find(v => v.videoSite === 'YouTube' && v.videoType === 'Trailer');
