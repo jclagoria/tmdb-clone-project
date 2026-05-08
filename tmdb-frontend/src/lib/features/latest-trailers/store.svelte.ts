@@ -1,4 +1,5 @@
-import { fetchLatestTrailersPopular, transformToMovie } from "$lib/features/latest-trailers/api";
+import { fetchLatestTrailersPopular, fetchLatestTrailersStreaming, transformToMovie } from "$lib/features/latest-trailers/api";
+import type { LatestTrailerItem } from "$lib/features/latest-trailers/types";
 import type { Movie } from "$lib/types/movie";
 
 export function createLatestTrailersStore() {
@@ -16,7 +17,18 @@ export function createLatestTrailersStore() {
         error = null;
 
         try {
-            const items = await fetchLatestTrailersPopular();
+            let items: LatestTrailerItem[];
+            
+            switch (activeTab) {
+                case 'streaming':
+                    items = await fetchLatestTrailersStreaming();
+                    break;
+                case 'popular':
+                default:
+                    items = await fetchLatestTrailersPopular();
+                    break;
+            }
+            
             movies = items.map(transformToMovie);
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to load trailers';
@@ -28,6 +40,7 @@ export function createLatestTrailersStore() {
 
     function setActiveTab(tab: string) {
         activeTab = tab.toLowerCase().replace(/\s+/g, '');
+        loadMovies();
     }
 
     function openModal(movie: Movie) {
