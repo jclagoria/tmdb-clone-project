@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Hero from '$lib/components/Hero.svelte';
     import TrendingSection from "$lib/features/trending/components/TrendingSection.svelte";
-    import WhatsPopularSection from "$lib/features/whats-popular/components/WhatsPopularSection.svelte";
-    import FreeToWatchSection from "$lib/features/free-to-watch/components/FreeToWatchSection.svelte";
     import LatestTrailersSection from "$lib/components/LatestTrailersSection.svelte";
 	import { mockMovies } from '$lib/data/movies';
+
+	let WhatsPopularSection = $state<any>(null);
+	let FreeToWatchSection = $state<any>(null);
+	let loaded = $state(false);
 
 	let trailersActiveTab = $state('popular');
 
@@ -17,6 +20,16 @@
 	function handleSearch(query: string) {
 		console.log('Search query:', query);
 	}
+
+	onMount(async () => {
+		const [{ default: WhatsPopular }, { default: FreeToWatch }] = await Promise.all([
+			import("$lib/features/whats-popular/components/WhatsPopularSection.svelte"),
+			import("$lib/features/free-to-watch/components/FreeToWatchSection.svelte")
+		]);
+		WhatsPopularSection = WhatsPopular;
+		FreeToWatchSection = FreeToWatch;
+		loaded = true;
+	});
 </script>
 
 <Hero onSearch={handleSearch} />
@@ -25,6 +38,10 @@
 
 <LatestTrailersSection />
 
-<WhatsPopularSection />
+{#if loaded && WhatsPopularSection}
+	<WhatsPopularSection />
+{/if}
 
-<FreeToWatchSection />
+{#if loaded && FreeToWatchSection}
+	<FreeToWatchSection />
+{/if}

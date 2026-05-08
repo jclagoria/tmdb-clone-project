@@ -7,9 +7,20 @@ const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 let apiKey = '';
 let mockMode = true;
 
+const requestCache = new Map<string, Promise<any>>();
+
 export function setApiKey(key: string) {
 	apiKey = key;
 	mockMode = false;
+}
+
+export async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+	if (requestCache.has(key)) {
+		return requestCache.get(key);
+	}
+	const promise = fetcher();
+	requestCache.set(key, promise);
+	return promise;
 }
 
 export function getImageUrl(path: string | null, size: string = 'w500'): string | null {

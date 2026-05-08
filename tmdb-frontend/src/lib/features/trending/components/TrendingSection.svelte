@@ -7,6 +7,9 @@
 
     $effect(() => {
         store.loadTrending();
+        return () => {
+            // Cleanup if needed - abort pending requests, clear subscriptions
+        };
     });
 
     function handleTabClick(tab: string) {
