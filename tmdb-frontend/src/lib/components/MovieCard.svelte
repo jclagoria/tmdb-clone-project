@@ -2,6 +2,7 @@
 	import type { Movie } from '$lib/types/movie';
 	import { getGenreName, getRatingColor, getYear, getTitle } from '$lib/types/movie';
 	import { getImageUrl } from '$lib/api';
+	import { goto } from '$app/navigation';
 
 	let { movie }: { movie: Movie } = $props();
 
@@ -10,8 +11,15 @@
 	const title = $derived(getTitle(movie));
 	const posterUrl = $derived(getImageUrl(movie.poster_path));
 
+	let imageLoaded = $state(false);
+
+	function handleImageLoad(e: Event) {
+		const img = e.currentTarget as HTMLImageElement;
+		imageLoaded = true;
+	}
+
 	function handleClick() {
-		alert(`Opening: ${title}`);
+		goto(`/movie/${movie.id}`);
 	}
 </script>
 
@@ -28,7 +36,8 @@
 				alt={title}
 				loading="lazy"
 				decoding="async"
-				class="w-full h-full object-cover"
+				onload={handleImageLoad}
+				class="w-full h-full object-cover transition-opacity duration-300 {imageLoaded ? 'opacity-100' : 'opacity-0'}"
 			/>
 		{:else}
 			<div class="w-full h-full flex items-center justify-center text-4xl text-gray-600">
