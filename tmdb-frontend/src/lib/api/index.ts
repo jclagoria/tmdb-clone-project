@@ -7,7 +7,33 @@ const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 let apiKey = '';
 let mockMode = true;
 
-const requestCache = new Map<string, Promise<any>>();
+const CACHE_TTL = 5 * 60 * 1000;
+const MAX_CACHE_SIZE = 50;
+
+interface CacheEntry<T> {
+	promise: Promise<T>;
+	timestamp: number;
+}
+
+const requestCache = new Map<string, CacheEntry<any>>();
+
+function cleanExpiredCache() {
+	const now = Date.now();
+	for (const [k, v] of requestCache) {
+		if (now - v.timestamp > CACHE_TTL) {
+			requestCache.delete(k);
+		}
+	}
+}
+
+function enforceMaxSize() {
+	if (requestCache.size >= MAX_CACHE_SIZE) {
+		const firstKey = requestCache.keys().next().value;
+		if (firstKey) {
+			requestCache.delete(firstKey);
+		}
+	}
+}
 
 export function setApiKey(key: string) {
 	apiKey = key;
@@ -15,11 +41,19 @@ export function setApiKey(key: string) {
 }
 
 export async function fetchWithCache<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+	cleanExpiredCache();
+	enforceMaxSize();
+
 	if (requestCache.has(key)) {
-		return requestCache.get(key);
+		const entry = requestCache.get(key);
+		if (entry && Date.now() - entry.timestamp <= CACHE_TTL) {
+			return entry.promise;
+		}
+		requestCache.delete(key);
 	}
+
 	const promise = fetcher();
-	requestCache.set(key, promise);
+	requestCache.set(key, { promise, timestamp: Date.now() });
 	return promise;
 }
 

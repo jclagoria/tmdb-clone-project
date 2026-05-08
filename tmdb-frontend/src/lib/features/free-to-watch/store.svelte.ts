@@ -1,5 +1,6 @@
 import { mockFreeToWatch } from "$lib/data/movies";
 import { fetchFreeToWatchMovies, fetchFreeToWatchTVShows, transformToMediaType, transformTVToMediaType } from "./api";
+import { fetchWithCache } from "$lib/api";
 import type { Movie } from "$lib/types/movie";
 
 export type FreeToWatchTab = 'movies' | 'tv';
@@ -14,15 +15,16 @@ export function createFreeToWatchStore() {
     const tabValues: FreeToWatchTab[] = ['movies', 'tv'];
 
     async function loadMovies(type: FreeToWatchTab) {
+        const cacheKey = `free-to-watch-${type}`;
         isLoading = true;
         error = null;
 
         try {
             if (type === 'movies') {
-                const items = await fetchFreeToWatchMovies();
+                const items = await fetchWithCache(cacheKey, () => fetchFreeToWatchMovies());
                 movies = items.map(transformToMediaType);
             } else {
-                const items = await fetchFreeToWatchTVShows();
+                const items = await fetchWithCache(cacheKey, () => fetchFreeToWatchTVShows());
                 movies = items.map(transformTVToMediaType);
             }
         } catch (e) {

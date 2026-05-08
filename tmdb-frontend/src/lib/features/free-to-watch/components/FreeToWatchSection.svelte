@@ -7,6 +7,9 @@
 
     $effect(() => {
         store.loadMovies();
+        return () => {
+            // Cleanup if needed
+        };
     });
 
     function handleTabClick(tab: string) {
