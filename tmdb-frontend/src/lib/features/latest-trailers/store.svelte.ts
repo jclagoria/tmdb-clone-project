@@ -1,4 +1,4 @@
-import { fetchLatestTrailersPopular, fetchLatestTrailersStreaming, transformToMovie } from "$lib/features/latest-trailers/api";
+import { fetchLatestTrailersPopular, fetchLatestTrailersStreaming, fetchLatestTrailersForRent, transformToMovie } from "$lib/features/latest-trailers/api";
 import type { LatestTrailerItem } from "$lib/features/latest-trailers/types";
 import type { Movie } from "$lib/types/movie";
 
@@ -10,7 +10,7 @@ export function createLatestTrailersStore() {
     let isModalOpen = $state<boolean>(false);
     let selectedMovie = $state<Movie | null>(null);
 
-    const tabs = ['Popular', 'Streaming', 'On TV', 'For Rent', 'In Theaters'];
+    const tabs = ['Popular', 'Streaming', 'For Rent', 'In Theaters'];
 
     async function loadMovies() {
         isLoading = true;
@@ -22,6 +22,9 @@ export function createLatestTrailersStore() {
             switch (activeTab) {
                 case 'streaming':
                     items = await fetchLatestTrailersStreaming();
+                    break;
+                case 'forrent':
+                    items = await fetchLatestTrailersForRent();
                     break;
                 case 'popular':
                 default:
