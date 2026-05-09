@@ -1,9 +1,11 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.NowPlayingResponseDTO;
+import com.api.tmdb.application.dto.response.TvOnTheAirResponseDTO;
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
 import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetNowPlayingUseCase;
+import com.api.tmdb.application.usecase.GetTvOnTheAirUseCase;
 import com.api.tmdb.application.usecase.GetWhatsPopularUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,15 +31,18 @@ public class WhatsPopularController {
     private final GetWhatsPopularUseCase getWhatsPopularUseCase;
     private final GetForRentUseCase getForRentUseCase;
     private final GetNowPlayingUseCase getNowPlayingUseCase;
+    private final GetTvOnTheAirUseCase getTvOnTheAirUseCase;
 
     public WhatsPopularController(
             GetWhatsPopularUseCase getWhatsPopularUseCase,
             GetForRentUseCase getForRentUseCase1,
-            GetNowPlayingUseCase getNowPlayingUseCase
+            GetNowPlayingUseCase getNowPlayingUseCase,
+            GetTvOnTheAirUseCase getTvOnTheAirUseCase
     ) {
         this.getWhatsPopularUseCase = getWhatsPopularUseCase;
         this.getForRentUseCase = getForRentUseCase1;
         this.getNowPlayingUseCase = getNowPlayingUseCase;
+        this.getTvOnTheAirUseCase = getTvOnTheAirUseCase;
     }
 
     @GetMapping("/streaming")
@@ -116,6 +121,33 @@ public class WhatsPopularController {
         Mono<NowPlayingResponseDTO> response = getNowPlayingUseCase
                 .getNowPlaying(language, region, page)
                 .map(NowPlayingResponseDTO::fromDomain);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/tv/on-the-air")
+    @Operation(
+            summary = "Get TV shows on the air",
+            description = "Get a list of TV shows that air in the next 7 days",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved on-the-air TV shows"),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public ResponseEntity<Mono<TvOnTheAirResponseDTO>> getTvOnTheAir(
+            @Parameter(description = "Language code (e.g., en-US)")
+            @RequestParam(name = "language", defaultValue = "en-US") String language,
+            @Parameter(description = "Page number")
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @Parameter(description = "Timezone (e.g., US/New_York)")
+            @RequestParam(name = "timezone", required = false) String timezone) {
+
+        logger.info("getTvOnTheAir request: language={}, page={}, timezone={}", language, page, timezone);
+
+        Mono<TvOnTheAirResponseDTO> response = getTvOnTheAirUseCase
+                .getTvOnTheAir(language, page, timezone)
+                .map(TvOnTheAirResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
     }
