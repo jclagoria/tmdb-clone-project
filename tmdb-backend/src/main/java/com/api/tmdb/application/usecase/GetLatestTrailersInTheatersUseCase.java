@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
+@Deprecated
 @Service
 public class GetLatestTrailersInTheatersUseCase implements LatestTrailersInTheatersPort {
 

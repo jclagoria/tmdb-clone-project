@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TmdbMoviesPortTest {
 
     @Test
-    void tmdbMoviesPort_shouldHave3Methods() {
+    void tmdbMoviesPort_shouldHave9Methods() {
         var methods = TmdbMoviesPort.class.getDeclaredMethods();
-        assertEquals(3, methods.length);
+        assertEquals(9, methods.length);
     }
 
     @Test
@@ -32,9 +32,51 @@ class TmdbMoviesPortTest {
     }
 
     @Test
+    void tmdbMoviesPort_shouldHaveGetNowPlayingMoviesMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "getNowPlayingMovies", String.class, Integer.class, String.class);
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
     void tmdbMoviesPort_shouldHaveGetMovieVideosMethod() throws NoSuchMethodException {
         Method method = TmdbMoviesPort.class.getDeclaredMethod(
                 "getMovieVideos", Integer.class, String.class);
+        assertTrue(method.getReturnType().getName().contains("Mono"));
+    }
+
+    @Test
+    void tmdbMoviesPort_shouldHaveDiscoverMoviesMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "discoverMovies", String.class, Integer.class, String.class, String.class);
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
+    void tmdbMoviesPort_shouldHaveDiscoverTvShowsMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "discoverTvShows", String.class, Integer.class, String.class, String.class);
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
+    void tmdbMoviesPort_shouldHaveGetTvDetailsMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "getTvDetails", Integer.class, String.class);
+        assertTrue(method.getReturnType().getName().contains("Mono"));
+    }
+
+    @Test
+    void tmdbMoviesPort_shouldHaveGetTvSeasonVideosMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "getTvSeasonVideos", Integer.class, Integer.class, String.class);
+        assertTrue(method.getReturnType().getName().contains("Mono"));
+    }
+
+    @Test
+    void tmdbMoviesPort_shouldHaveGetTvEpisodeVideosMethod() throws NoSuchMethodException {
+        Method method = TmdbMoviesPort.class.getDeclaredMethod(
+                "getTvEpisodeVideos", Integer.class, Integer.class, Integer.class, String.class);
         assertTrue(method.getReturnType().getName().contains("Mono"));
     }
 }

@@ -1,8 +1,6 @@
 package com.api.tmdb.application.usecase;
 
-import com.api.tmdb.domain.model.LatestTrailerItem;
-import com.api.tmdb.domain.model.LatestTrailerResponse;
-import com.api.tmdb.domain.model.VideoItem;
+import com.api.tmdb.domain.model.*;
 import com.api.tmdb.domain.model.enums.MediaType;
 import com.api.tmdb.domain.port.inbound.MoviesPort;
 import com.api.tmdb.domain.port.outbound.TmdbMoviesPort;
@@ -22,6 +20,8 @@ public class GetLatestTrailersUseCase implements MoviesPort {
 
     private static final Logger log = LoggerFactory.getLogger(GetLatestTrailersUseCase.class);
     private static final int TAKE = 10;
+    private static final int MOVIE_LIMIT = 20;
+    private static final int TV_LIMIT = 20;
     private static final int FINAL_LIMIT = 20;
 
     private final TmdbMoviesPort tmdbMoviesPort;
@@ -39,7 +39,7 @@ public class GetLatestTrailersUseCase implements MoviesPort {
     public Mono<LatestTrailerResponse> getLatestTrailers(String language) {
         String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
 
-        log.debug("Executing GetLatestTrailersUseCase: language={}", effectiveLanguage);
+        log.debug("Executing GetLatestTrailersUseCase.getLatestTrailers: language={}", effectiveLanguage);
 
         LocalDate today = LocalDate.now();
         LocalDate thursdayGte = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.THURSDAY));
@@ -61,7 +61,7 @@ public class GetLatestTrailersUseCase implements MoviesPort {
                     merged.addAll(tuple.getT1());
                     merged.addAll(tuple.getT2());
 
-                    List<LatestTrailerItem> deduplicated = duplicate(merged);
+                    List<LatestTrailerItem> deduplicated = deduplicate(merged);
                     List<LatestTrailerItem> sorted = deduplicated.stream()
                             .sorted(Comparator.comparingDouble(LatestTrailerItem::popularity).reversed())
                             .limit(FINAL_LIMIT)
@@ -69,36 +69,107 @@ public class GetLatestTrailersUseCase implements MoviesPort {
 
                     return fetchVideos(sorted, effectiveLanguage);
                 })
-                .doOnSuccess(response -> log.debug("GetLatestTrailersUseCase completed: totalResults={}",
+                .doOnSuccess(response -> log.debug("getLatestTrailers completed: totalResults={}",
                         response != null ? response.totalResults() : 0));
     }
 
-    private List<LatestTrailerItem> processItems(
-            List<LatestTrailerItem> items,
-            MediaType mediaType,
-            int limit) {
+    @Override
+    @Cacheable(
+            key = "'latestTrailers:streaming:' + #language + ':' + #watchRegion",
+            type = LatestTrailerResponse.class,
+            ttlMinutes = 30
+    )
+    public Mono<LatestTrailerResponse> getStreaming(String language, String watchRegion) {
+        String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
+        String effectiveRegion = (watchRegion == null || watchRegion.isBlank()) ? "US" : watchRegion;
+
+        log.debug("Executing GetLatestTrailersUseCase.getStreaming: language={}, region={}",
+                effectiveLanguage, effectiveRegion);
+
+        Mono<List<LatestTrailerItem>> moviesMono = tmdbMoviesPort
+                .discoverMovies(effectiveLanguage, 1, effectiveRegion, "flatrate")
+                .map(response -> processItems(response.results(), MediaType.MOVIE, MOVIE_LIMIT));
+
+        Mono<List<LatestTrailerItem>> tvShowsMono = tmdbMoviesPort
+                .discoverTvShows(effectiveLanguage, 1, effectiveRegion, "flatrate")
+                .map(response -> processItems(response.results(), MediaType.TV, TV_LIMIT));
+
+        return Mono.zip(moviesMono, tvShowsMono)
+                .flatMap(tuple -> {
+                    List<LatestTrailerItem> merged = new ArrayList<>();
+                    merged.addAll(tuple.getT1());
+                    merged.addAll(tuple.getT2());
+
+                    List<LatestTrailerItem> deduplicated = deduplicate(merged);
+                    List<LatestTrailerItem> sorted = deduplicated.stream()
+                            .sorted(Comparator.comparingDouble(LatestTrailerItem::popularity).reversed())
+                            .limit(FINAL_LIMIT)
+                            .toList();
+
+                    return fetchVideosForStreaming(sorted, effectiveLanguage);
+                })
+                .doOnSuccess(response -> log.debug("getStreaming completed: totalResults={}",
+                        response != null ? response.totalResults() : 0));
+    }
+
+    @Override
+    @Cacheable(
+            key = "'latestTrailers:forRent:' + #language + ':' + #watchRegion",
+            type = LatestTrailerResponse.class,
+            ttlMinutes = 30
+    )
+    public Mono<LatestTrailerResponse> getForRent(String language, String watchRegion) {
+        String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
+        String effectiveRegion = (watchRegion == null || watchRegion.isBlank()) ? "US" : watchRegion;
+
+        log.debug("Executing GetLatestTrailersUseCase.getForRent: language={}, region={}",
+                effectiveLanguage, effectiveRegion);
+
+        return tmdbMoviesPort.discoverMovies(effectiveLanguage, 1, effectiveRegion, "rent")
+                .map(response -> processItems(response.results(), MediaType.MOVIE, FINAL_LIMIT))
+                .flatMap(items -> fetchVideos(items, effectiveLanguage))
+                .doOnSuccess(response -> log.debug("getForRent completed: totalResults={}",
+                        response != null ? response.totalResults() : 0));
+    }
+
+    @Override
+    @Cacheable(
+            key = "'latestTrailers:inTheaters:' + #language",
+            type = LatestTrailerResponse.class,
+            ttlMinutes = 30
+    )
+    public Mono<LatestTrailerResponse> getInTheaters(String language) {
+        String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
+
+        log.debug("Executing GetLatestTrailersUseCase.getInTheaters: language={}", effectiveLanguage);
+
+        return tmdbMoviesPort.getNowPlayingMovies(effectiveLanguage, 1, null)
+                .map(response -> processItems(response.results(), MediaType.MOVIE, FINAL_LIMIT))
+                .flatMap(items -> {
+                    List<LatestTrailerItem> deduplicated = deduplicate(items);
+                    List<LatestTrailerItem> sorted = deduplicated.stream()
+                            .sorted(Comparator.comparingDouble(LatestTrailerItem::popularity).reversed())
+                            .limit(FINAL_LIMIT)
+                            .toList();
+                    return fetchVideos(sorted, effectiveLanguage);
+                })
+                .doOnSuccess(response -> log.debug("getInTheaters completed: totalResults={}",
+                        response != null ? response.totalResults() : 0));
+    }
+
+    private List<LatestTrailerItem> processItems(List<LatestTrailerItem> items, MediaType mediaType, int limit) {
         return items.stream().limit(limit)
                 .map(item -> new LatestTrailerItem(
-                        item.id(),
-                        item.title(),
-                        item.overview(),
-                        item.posterPath(),
-                        item.backdropPath(),
-                        item.popularity(),
-                        item.voteAverage(),
-                        item.voteCount(),
-                        item.releaseDate(),
-                        item.originalTitle(),
-                        item.originalLanguage(),
-                        item.genreIds(),
-                        mediaType,
+                        item.id(), item.title(), item.overview(), item.posterPath(), item.backdropPath(),
+                        item.popularity(), item.voteAverage(), item.voteCount(), item.releaseDate(),
+                        item.originalTitle(), item.originalLanguage(), item.genreIds(), mediaType,
                         item.originCountry(),
                         null, null, null, null, null, null
                 ))
                 .toList();
     }
 
-    private List<LatestTrailerItem> duplicate(List<LatestTrailerItem> items) {
+    private List<LatestTrailerItem> deduplicate(List<LatestTrailerItem> items) {
         Set<Integer> seenIds = new HashSet<>();
         return items.stream()
                 .filter(item -> seenIds.add(item.id()))
@@ -118,6 +189,21 @@ public class GetLatestTrailersUseCase implements MoviesPort {
         });
     }
 
+    private Mono<LatestTrailerResponse> fetchVideosForStreaming(List<LatestTrailerItem> items, String language) {
+        List<Mono<LatestTrailerItem>> videoRequests = items.stream()
+                .map(item -> fetchVideoForStreamingItem(item, language))
+                .toList();
+
+        return Mono.zip(videoRequests, results -> {
+            List<LatestTrailerItem> enriched = Arrays.stream(results)
+                    .map(LatestTrailerItem.class::cast)
+                    .sorted(Comparator.comparingDouble(LatestTrailerItem::popularity).reversed())
+                    .limit(FINAL_LIMIT)
+                    .toList();
+            return new LatestTrailerResponse(1, enriched, enriched.size());
+        });
+    }
+
     private Mono<LatestTrailerItem> fetchVideoForItem(LatestTrailerItem item, String language) {
         return tmdbMoviesPort.getMovieVideos(item.id(), language)
                 .map(videos -> enrichWithVideo(item, videos))
@@ -125,6 +211,66 @@ public class GetLatestTrailersUseCase implements MoviesPort {
                     log.warn("Failed to fetch video for movie {}: {}", item.id(), e.getMessage());
                     return Mono.just(item);
                 });
+    }
+
+    private Mono<LatestTrailerItem> fetchVideoForStreamingItem(LatestTrailerItem item, String language) {
+        if (item.mediaType() == MediaType.MOVIE) {
+            return tmdbMoviesPort.getMovieVideos(item.id(), language)
+                    .map(videos -> enrichWithVideo(item, videos))
+                    .onErrorResume(e -> {
+                        log.warn("Failed to fetch video for movie {}: {}", item.id(), e.getMessage());
+                        return Mono.just(item);
+                    });
+        } else {
+            return fetchTvVideo(item, language);
+        }
+    }
+
+    private Mono<LatestTrailerItem> fetchTvVideo(LatestTrailerItem item, String language) {
+        return tmdbMoviesPort.getTvDetails(item.id(), language)
+                .flatMap(details -> fetchTvVideosChain(item, details, language))
+                .onErrorResume(e -> {
+                    log.warn("Failed to fetch TV details for {}: {}", item.id(), e.getMessage());
+                    return Mono.just(item);
+                });
+    }
+
+    private Mono<LatestTrailerItem> fetchTvVideosChain(LatestTrailerItem item, TvSeriesDetails details, String language) {
+        EpisodeInfo episodeInfo = getPreferredEpisode(details);
+
+        if (episodeInfo == null) {
+            log.debug("No episode info available for TV {}", item.id());
+            return Mono.just(item);
+        }
+
+        return tmdbMoviesPort.getTvEpisodeVideos(item.id(), episodeInfo.seasonNumber(), episodeInfo.episodeNumber(), language)
+                .flatMap(videos -> {
+                    if (!videos.isEmpty()) {
+                        return Mono.just(enrichWithVideo(item, videos));
+                    }
+                    return fallbackToSeasonVideos(item, episodeInfo.seasonNumber(), language);
+                })
+                .switchIfEmpty(Mono.defer(() -> fallbackToSeasonVideos(item, episodeInfo.seasonNumber(), language)))
+                .onErrorResume(e -> {
+                    log.warn("Failed to fetch TV videos for {}: {}", item.id(), e.getMessage());
+                    return Mono.just(item);
+                });
+    }
+
+    private EpisodeInfo getPreferredEpisode(TvSeriesDetails details) {
+        if (details.nextEpisodeToAir() != null) {
+            return details.nextEpisodeToAir();
+        }
+        if (details.lastEpisodeToAir() != null) {
+            return details.lastEpisodeToAir();
+        }
+        return null;
+    }
+
+    private Mono<LatestTrailerItem> fallbackToSeasonVideos(LatestTrailerItem item, Integer seasonNumber, String language) {
+        return tmdbMoviesPort.getTvSeasonVideos(item.id(), seasonNumber, language)
+                .map(videos -> enrichWithVideo(item, videos))
+                .switchIfEmpty(Mono.just(item));
     }
 
     private LatestTrailerItem enrichWithVideo(LatestTrailerItem item, List<VideoItem> videos) {

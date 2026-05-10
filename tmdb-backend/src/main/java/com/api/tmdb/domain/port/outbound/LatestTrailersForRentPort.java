@@ -6,7 +6,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+@Deprecated
 public interface LatestTrailersForRentPort {
+    @Deprecated
     Mono<LatestTrailerResponse> getForRent(String language, String watchRegion);
+    @Deprecated
     Mono<List<VideoItem>> getMovieVideos(Integer movieId, String language);
 }
