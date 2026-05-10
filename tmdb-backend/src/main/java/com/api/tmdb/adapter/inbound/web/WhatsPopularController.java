@@ -142,7 +142,7 @@ public class WhatsPopularController {
         logger.info("getTvOnTheAir request: language={}, page={}, timezone={}", language, page, timezone);
 
         Mono<TvOnTheAirResponseDTO> response = getTvOnTheAirUseCase
-                .getTvOnTheAir(language, page, timezone)
+                .getOnTheAir(language, page, timezone)
                 .map(TvOnTheAirResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
