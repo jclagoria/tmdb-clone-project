@@ -3,8 +3,8 @@ package com.api.tmdb.adapter.inbound.web;
 import com.api.tmdb.application.dto.response.LatestTrailersResponseDTO;
 import com.api.tmdb.application.usecase.GetLatestTrailersForRentUseCase;
 import com.api.tmdb.application.usecase.GetLatestTrailersInTheatersUseCase;
-import com.api.tmdb.application.usecase.GetLatestTrailersPopularUseCase;
 import com.api.tmdb.application.usecase.GetLatestTrailersStreamingUseCase;
+import com.api.tmdb.application.usecase.GetLatestTrailersUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,18 +26,18 @@ import reactor.core.publisher.Mono;
 public class LatestTrailersController {
 
     private static final Logger log = LoggerFactory.getLogger(LatestTrailersController.class);
-    private final GetLatestTrailersPopularUseCase useCase;
+    private final GetLatestTrailersUseCase getLatestTrailersUseCase;
     private final GetLatestTrailersStreamingUseCase streamingUseCase;
     private final GetLatestTrailersForRentUseCase forRentUseCase;
     private final GetLatestTrailersInTheatersUseCase inTheatersUseCase;
 
     public LatestTrailersController(
-            GetLatestTrailersPopularUseCase useCase,
+            GetLatestTrailersUseCase getLatestTrailersUseCase,
             GetLatestTrailersStreamingUseCase streamingUseCase,
             GetLatestTrailersForRentUseCase forRentUseCase,
             GetLatestTrailersInTheatersUseCase inTheatersUseCase
     ) {
-        this.useCase = useCase;
+        this.getLatestTrailersUseCase = getLatestTrailersUseCase;
         this.streamingUseCase = streamingUseCase;
         this.forRentUseCase = forRentUseCase;
         this.inTheatersUseCase = inTheatersUseCase;
@@ -58,7 +58,8 @@ public class LatestTrailersController {
 
         log.info("LatestTrailersPopular request: language={}", language);
 
-        Mono<LatestTrailersResponseDTO> response = useCase.getPopular(language)
+        Mono<LatestTrailersResponseDTO> response = getLatestTrailersUseCase
+                .getLatestTrailers(language)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
