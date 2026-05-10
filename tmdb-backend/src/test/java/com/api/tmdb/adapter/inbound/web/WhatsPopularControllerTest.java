@@ -1,10 +1,10 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
+import com.api.tmdb.application.usecase.GetDiscoverUseCase;
 import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetNowPlayingUseCase;
 import com.api.tmdb.application.usecase.GetTvOnTheAirUseCase;
-import com.api.tmdb.application.usecase.GetWhatsPopularUseCase;
 import com.api.tmdb.domain.model.WhatsPopularItem;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 class WhatsPopularControllerTest {
 
     @Mock
-    private GetWhatsPopularUseCase getWhatsPopularUseCase;
+    private GetDiscoverUseCase getDiscoverUseCase;
 
     @Mock
     private GetForRentUseCase getForRentUseCase;
@@ -41,7 +41,7 @@ class WhatsPopularControllerTest {
 
     @BeforeEach
     void setUp() {
-        whatsPopularController = new WhatsPopularController(getWhatsPopularUseCase, getForRentUseCase, getNowPlayingUseCase, getTvOnTheAirUseCase);
+        whatsPopularController = new WhatsPopularController(getDiscoverUseCase, getForRentUseCase, getNowPlayingUseCase, getTvOnTheAirUseCase);
     }
 
     @Test
@@ -53,7 +53,7 @@ class WhatsPopularControllerTest {
                 null, false, false);
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(item), 1);
 
-        when(getWhatsPopularUseCase.getWhatsPopular(any(), any(), any()))
+        when(getDiscoverUseCase.getWhatsPopular(any(), any(), any()))
                 .thenReturn(Mono.just(response));
 
         ResponseEntity<Mono<WhatsPopularResponseDTO>> result = 
@@ -67,7 +67,7 @@ class WhatsPopularControllerTest {
     void getWhatsPopular_shouldUseDefaultLanguage_whenNotProvided() {
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(), 0);
 
-        when(getWhatsPopularUseCase.getWhatsPopular(eq("en-US"), any(), any()))
+        when(getDiscoverUseCase.getWhatsPopular(eq("en-US"), any(), any()))
                 .thenReturn(Mono.just(response));
 
         ResponseEntity<Mono<WhatsPopularResponseDTO>> result = 
@@ -80,7 +80,7 @@ class WhatsPopularControllerTest {
     void getWhatsPopular_shouldUseDefaultRegion_whenNotProvided() {
         WhatsPopularResponse response = new WhatsPopularResponse(1, List.of(), 0);
 
-        when(getWhatsPopularUseCase.getWhatsPopular(any(), eq("US"), any()))
+        when(getDiscoverUseCase.getWhatsPopular(any(), eq("US"), any()))
                 .thenReturn(Mono.just(response));
 
         ResponseEntity<Mono<WhatsPopularResponseDTO>> result = 
@@ -91,7 +91,7 @@ class WhatsPopularControllerTest {
 
     @Test
     void getWhatsPopular_shouldReturnError_whenUseCaseFails() {
-        when(getWhatsPopularUseCase.getWhatsPopular(any(), any(), any()))
+        when(getDiscoverUseCase.getWhatsPopular(any(), any(), any()))
                 .thenReturn(Mono.error(new RuntimeException("Service Error")));
 
         ResponseEntity<Mono<WhatsPopularResponseDTO>> result = 

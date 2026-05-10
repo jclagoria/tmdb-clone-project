@@ -3,6 +3,7 @@ package com.api.tmdb.adapter.inbound.web;
 import com.api.tmdb.application.dto.response.NowPlayingResponseDTO;
 import com.api.tmdb.application.dto.response.TvOnTheAirResponseDTO;
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
+import com.api.tmdb.application.usecase.GetDiscoverUseCase;
 import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetNowPlayingUseCase;
 import com.api.tmdb.application.usecase.GetTvOnTheAirUseCase;
@@ -28,19 +29,19 @@ import reactor.core.publisher.Mono;
 public class WhatsPopularController {
 
     private static final Logger logger = LoggerFactory.getLogger(WhatsPopularController.class);
-    private final GetWhatsPopularUseCase getWhatsPopularUseCase;
+    private final GetDiscoverUseCase getDiscoverUseCase;
     private final GetForRentUseCase getForRentUseCase;
     private final GetNowPlayingUseCase getNowPlayingUseCase;
     private final GetTvOnTheAirUseCase getTvOnTheAirUseCase;
 
     public WhatsPopularController(
-            GetWhatsPopularUseCase getWhatsPopularUseCase,
-            GetForRentUseCase getForRentUseCase1,
+            GetDiscoverUseCase getDiscoverUseCase,
+            GetForRentUseCase getForRentUseCase,
             GetNowPlayingUseCase getNowPlayingUseCase,
             GetTvOnTheAirUseCase getTvOnTheAirUseCase
     ) {
-        this.getWhatsPopularUseCase = getWhatsPopularUseCase;
-        this.getForRentUseCase = getForRentUseCase1;
+        this.getDiscoverUseCase = getDiscoverUseCase;
+        this.getForRentUseCase = getForRentUseCase;
         this.getNowPlayingUseCase = getNowPlayingUseCase;
         this.getTvOnTheAirUseCase = getTvOnTheAirUseCase;
     }
@@ -65,7 +66,7 @@ public class WhatsPopularController {
 
         logger.info("getWhatsPopular request: language={}, region={}, page={}", language, region, page);
 
-        Mono<WhatsPopularResponseDTO> response = getWhatsPopularUseCase
+        Mono<WhatsPopularResponseDTO> response = getDiscoverUseCase
                 .getWhatsPopular(language, region, page)
                 .map(WhatsPopularResponseDTO::fromDomain);
 
