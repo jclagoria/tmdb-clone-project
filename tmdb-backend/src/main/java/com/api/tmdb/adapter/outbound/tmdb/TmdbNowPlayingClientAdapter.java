@@ -4,7 +4,6 @@ import com.api.tmdb.adapter.outbound.tmdb.mapper.NowPlayingMapper;
 import com.api.tmdb.domain.model.NowPlayingResponse;
 import com.api.tmdb.domain.port.outbound.TmdbNowPlayingPort;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
@@ -14,8 +13,8 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
 
+@Deprecated
 @Component
-@Primary
 public class TmdbNowPlayingClientAdapter extends TmdbBaseAdapter implements TmdbNowPlayingPort {
 
     private final NowPlayingMapper nowPlayingMapper;
