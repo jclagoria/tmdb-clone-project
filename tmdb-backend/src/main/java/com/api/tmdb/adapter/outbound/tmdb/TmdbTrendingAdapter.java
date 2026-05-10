@@ -3,9 +3,8 @@ package com.api.tmdb.adapter.outbound.tmdb;
 import com.api.tmdb.adapter.outbound.tmdb.mapper.TrendingMapper;
 import com.api.tmdb.domain.model.TrendingResponse;
 import com.api.tmdb.domain.model.enums.TimeWindow;
-import com.api.tmdb.domain.port.outbound.TmdbClientPort;
+import com.api.tmdb.domain.port.outbound.TmdbTrendingPort;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
@@ -15,19 +14,20 @@ import java.net.URI;
 import java.util.function.Function;
 
 /**
- * @deprecated Use {@link TmdbTrendingAdapter} instead.
+ * Adapter implementing TmdbTrendingPort for TMDB Trending API.
  * 
- * Migration: Replace with TmdbTrendingAdapter. This adapter does NOT
- * handle caching - use @Cacheable on use cases instead.
+ * This adapter calls the TMDB /trending endpoint:
+ * - /trending/all/{time_window}
+ * 
+ * Note: This adapter does NOT handle caching - that's managed by AOP
+ * in the use case layer via @Cacheable annotation.
  */
-@Deprecated
 @Component
-@Primary
-public class TmdbTrendingClientAdapter extends TmdbBaseAdapter implements TmdbClientPort {
+public class TmdbTrendingAdapter extends TmdbBaseAdapter implements TmdbTrendingPort {
 
     private final TrendingMapper trendingMapper;
 
-    public TmdbTrendingClientAdapter(
+    public TmdbTrendingAdapter(
             @Qualifier("tmdbWebClient") WebClient webClient,
             TrendingMapper trendingMapper) {
         super(webClient);
@@ -36,14 +36,12 @@ public class TmdbTrendingClientAdapter extends TmdbBaseAdapter implements TmdbCl
 
     @Override
     public Mono<TrendingResponse> getTrending(TimeWindow timeWindow, String language) {
-        String tmdbTimeWindow = timeWindow.getValue();
-        
-        log.debug("Calling TMDB API: /trending/all/{}?language={}", tmdbTimeWindow, language);
-        
+        log.debug("Calling TMDB API: /trending/all/{}?language={}", timeWindow.getValue(), language);
+
         Function<UriBuilder, URI> uriConfig = builder -> builder
-                .path("/trending/all/{timeWindow}")
+                .path("/trending/all/" + timeWindow.getValue())
                 .queryParam("language", language)
-                .build(tmdbTimeWindow);
+                .build();
 
         return executeGet(uriConfig, trendingMapper::mapToTrendingResponse);
     }
