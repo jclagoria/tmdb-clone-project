@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Component
+@Deprecated
 public class TmdbStreamingAdapter extends TmdbBaseAdapter implements TmdbStreamingPort {
 
     private static final Logger log = LoggerFactory.getLogger(TmdbStreamingAdapter.class);

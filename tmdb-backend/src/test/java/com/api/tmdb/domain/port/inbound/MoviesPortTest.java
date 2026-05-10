@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MoviesPortTest {
 
     @Test
-    void moviesPort_shouldHave1Method() {
+    void moviesPort_shouldHave4Methods() {
         var methods = MoviesPort.class.getDeclaredMethods();
-        assertEquals(1, methods.length);
+        assertEquals(4, methods.length);
     }
 
     @Test
@@ -21,6 +21,27 @@ class MoviesPortTest {
         Method method = MoviesPort.class.getDeclaredMethod(
                 "getLatestTrailers", String.class);
         assertTrue(method.getReturnType().getName().contains("Mono"));
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
+    void moviesPort_shouldHaveGetStreamingMethod() throws NoSuchMethodException {
+        Method method = MoviesPort.class.getDeclaredMethod(
+                "getStreaming", String.class, String.class);
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
+    void moviesPort_shouldHaveGetForRentMethod() throws NoSuchMethodException {
+        Method method = MoviesPort.class.getDeclaredMethod(
+                "getForRent", String.class, String.class);
+        assertEquals(Mono.class, method.getReturnType());
+    }
+
+    @Test
+    void moviesPort_shouldHaveGetInTheatersMethod() throws NoSuchMethodException {
+        Method method = MoviesPort.class.getDeclaredMethod(
+                "getInTheaters", String.class);
         assertEquals(Mono.class, method.getReturnType());
     }
 }

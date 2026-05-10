@@ -1,9 +1,6 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.LatestTrailersResponseDTO;
-import com.api.tmdb.application.usecase.GetLatestTrailersForRentUseCase;
-import com.api.tmdb.application.usecase.GetLatestTrailersInTheatersUseCase;
-import com.api.tmdb.application.usecase.GetLatestTrailersStreamingUseCase;
 import com.api.tmdb.application.usecase.GetLatestTrailersUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,20 +24,9 @@ public class LatestTrailersController {
 
     private static final Logger log = LoggerFactory.getLogger(LatestTrailersController.class);
     private final GetLatestTrailersUseCase getLatestTrailersUseCase;
-    private final GetLatestTrailersStreamingUseCase streamingUseCase;
-    private final GetLatestTrailersForRentUseCase forRentUseCase;
-    private final GetLatestTrailersInTheatersUseCase inTheatersUseCase;
 
-    public LatestTrailersController(
-            GetLatestTrailersUseCase getLatestTrailersUseCase,
-            GetLatestTrailersStreamingUseCase streamingUseCase,
-            GetLatestTrailersForRentUseCase forRentUseCase,
-            GetLatestTrailersInTheatersUseCase inTheatersUseCase
-    ) {
+    public LatestTrailersController(GetLatestTrailersUseCase getLatestTrailersUseCase) {
         this.getLatestTrailersUseCase = getLatestTrailersUseCase;
-        this.streamingUseCase = streamingUseCase;
-        this.forRentUseCase = forRentUseCase;
-        this.inTheatersUseCase = inTheatersUseCase;
     }
 
     @GetMapping("/popular")
@@ -82,7 +68,8 @@ public class LatestTrailersController {
 
         log.info("LatestTrailersStreaming request: language={}, watchRegion={}", language, watchRegion);
 
-        Mono<LatestTrailersResponseDTO> response = streamingUseCase.getStreaming(language, watchRegion)
+        Mono<LatestTrailersResponseDTO> response = getLatestTrailersUseCase
+                .getStreaming(language, watchRegion)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
@@ -105,7 +92,8 @@ public class LatestTrailersController {
 
         log.info("LatestTrailersForRent request: language={}, watchRegion={}", language, watchRegion);
 
-        Mono<LatestTrailersResponseDTO> response = forRentUseCase.getForRent(language, watchRegion)
+        Mono<LatestTrailersResponseDTO> response = getLatestTrailersUseCase
+                .getForRent(language, watchRegion)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
@@ -126,10 +114,10 @@ public class LatestTrailersController {
 
         log.info("LatestTrailersInTheaters request: language={}", language);
 
-        Mono<LatestTrailersResponseDTO> response = inTheatersUseCase.getInTheaters(language)
+        Mono<LatestTrailersResponseDTO> response = getLatestTrailersUseCase
+                .getInTheaters(language)
                 .map(LatestTrailersResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
     }
-
 }

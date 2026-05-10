@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.*;
 
+@Deprecated
 @Service
 public class GetLatestTrailersStreamingUseCase implements LatestTrailersStreamingPort {
 

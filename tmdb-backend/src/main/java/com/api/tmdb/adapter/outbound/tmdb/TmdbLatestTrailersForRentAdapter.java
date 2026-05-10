@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Component
+@Deprecated
 public class TmdbLatestTrailersForRentAdapter extends TmdbBaseAdapter implements LatestTrailersForRentPort {
 
     private static final Logger log = LoggerFactory.getLogger(TmdbLatestTrailersForRentAdapter.class);
