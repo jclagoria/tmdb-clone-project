@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.api.tmdb</groupId>
 	<artifactId>tmdb-clone</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.2.1-SNAPSHOT</version>
 	<name>tmdb-api-clone</name>
 	<description>TMDB API clone</description>
 
