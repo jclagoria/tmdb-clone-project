@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,18 +44,15 @@ class CachingAspectTest {
         when(pjp.getSignature()).thenReturn(methodSignature);
         when(methodSignature.getName()).thenReturn("testMethod");
         when(methodSignature.getParameterNames()).thenReturn(new String[]{});
+        when(methodSignature.getMethod()).thenReturn(TestService.class.getMethod("testMethod"));
         when(pjp.getTarget()).thenReturn(new TestService());
-        
-        Cacheable cacheable = mock(Cacheable.class);
-        doReturn("'testKey'").when(cacheable).key();
-        doReturn(String.class).when(cacheable).type();
-        doReturn(30).when(cacheable).ttlMinutes();
         
         when(cacheService.get(anyString(), eq(String.class))).thenReturn(Mono.just(cachedValue));
         
-        Object result = cachingAspect.cacheResult(pjp, cacheable);
+        Object result = cachingAspect.cacheResult(pjp);
         
-        assertEquals(cachedValue, result);
+        assertInstanceOf(Mono.class, result);
+        assertEquals(cachedValue, ((Mono<?>) result).block());
         verify(pjp, never()).proceed();
         verify(cacheService, never()).set(any(), any(), any());
     }
@@ -66,21 +64,18 @@ class CachingAspectTest {
         when(pjp.getSignature()).thenReturn(methodSignature);
         when(methodSignature.getName()).thenReturn("testMethod");
         when(methodSignature.getParameterNames()).thenReturn(new String[]{});
+        when(methodSignature.getMethod()).thenReturn(TestService.class.getMethod("testMethod"));
         when(pjp.getTarget()).thenReturn(new TestService());
         when(pjp.getArgs()).thenReturn(new Object[]{});
         
-        Cacheable cacheable = mock(Cacheable.class);
-        doReturn("'testKey'").when(cacheable).key();
-        doReturn(String.class).when(cacheable).type();
-        doReturn(30).when(cacheable).ttlMinutes();
-        
         when(cacheService.get(anyString(), eq(String.class))).thenReturn(Mono.empty());
-        when(pjp.proceed()).thenReturn(resultValue);
+        when(pjp.proceed()).thenReturn(Mono.just(resultValue));
         when(cacheService.set(anyString(), any(), any())).thenReturn(Mono.just(true));
         
-        Object result = cachingAspect.cacheResult(pjp, cacheable);
+        Object result = cachingAspect.cacheResult(pjp);
         
-        assertEquals(resultValue, result);
+        assertInstanceOf(Mono.class, result);
+        assertEquals(resultValue, ((Mono<?>) result).block());
         verify(pjp).proceed();
         verify(cacheService).set(eq("testKey"), eq(resultValue), any(Duration.class));
     }
@@ -92,21 +87,18 @@ class CachingAspectTest {
         when(pjp.getSignature()).thenReturn(methodSignature);
         when(methodSignature.getName()).thenReturn("testMethod");
         when(methodSignature.getParameterNames()).thenReturn(new String[]{});
+        when(methodSignature.getMethod()).thenReturn(TestService.class.getMethod("testMethod"));
         when(pjp.getTarget()).thenReturn(new TestService());
         when(pjp.getArgs()).thenReturn(new Object[]{});
         
-        Cacheable cacheable = mock(Cacheable.class);
-        doReturn("'testKey'").when(cacheable).key();
-        doReturn(String.class).when(cacheable).type();
-        doReturn(30).when(cacheable).ttlMinutes();
-        
         when(cacheService.get(anyString(), eq(String.class)))
             .thenReturn(Mono.error(new RuntimeException("Redis unavailable")));
-        when(pjp.proceed()).thenReturn(resultValue);
+        when(pjp.proceed()).thenReturn(Mono.just(resultValue));
         
-        Object result = cachingAspect.cacheResult(pjp, cacheable);
+        Object result = cachingAspect.cacheResult(pjp);
         
-        assertEquals(resultValue, result);
+        assertInstanceOf(Mono.class, result);
+        assertEquals(resultValue, ((Mono<?>) result).block());
         verify(pjp).proceed();
         verify(cacheService, never()).set(any(), any(), any());
     }
