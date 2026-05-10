@@ -118,6 +118,34 @@ public class GetDiscoverUseCase implements DiscoverPort {
                 .doOnError(error -> log.error("getFreeMovies failed: {}", error.getMessage(), error));
     }
 
+    @Cacheable(
+        key = "'freeTvShows:' + #language + ':' + #region + ':' + #page",
+        type = WhatsPopularResponse.class,
+        ttlMinutes = 60
+    )
+    public Mono<WhatsPopularResponse> getFreeTvShows(String language, String region, Integer page) {
+        String effectiveLanguage = (language == null || language.isBlank()) ? "en-US" : language;
+        String effectiveRegion = (region == null || region.isBlank()) ? "US" : region;
+        int effectivePage = (page == null || page < 1) ? 1 : page;
+
+        log.debug("Executing GetDiscoverUseCase.getFreeTvShows: language={}, region={}, page={}",
+                effectiveLanguage, effectiveRegion, effectivePage);
+
+        DiscoverParams params = new DiscoverParams(
+                "popularity.desc",
+                effectiveRegion,
+                "free",
+                effectivePage,
+                effectiveLanguage,
+                false
+        );
+
+        return tmdbDiscoverPort.discoverTv(params)
+                .doOnSuccess(response -> log.debug("getFreeTvShows completed: totalResults={}",
+                        response != null ? response.totalResults() : 0))
+                .doOnError(error -> log.error("getFreeTvShows failed: {}", error.getMessage(), error));
+    }
+
     private Mono<WhatsPopularResponse> fetchAndCombine(int page, DiscoverParams params) {
         Mono<WhatsPopularResponse> moviesMono = tmdbDiscoverPort.discoverMovies(params);
         Mono<WhatsPopularResponse> tvMono = tmdbDiscoverPort.discoverTv(params);

@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
+@Deprecated
 @Service
 public class GetFreeToWatchTvUseCase implements FreeToWatchTvPort {
 
@@ -21,12 +22,14 @@ public class GetFreeToWatchTvUseCase implements FreeToWatchTvPort {
     private final TmdbWhatsPopularClientPort tmdbClientPort;
     private final CacheService cacheService;
 
+    @Deprecated
     public GetFreeToWatchTvUseCase(TmdbWhatsPopularClientPort tmdbClientPort, CacheService cacheService) {
         this.tmdbClientPort = tmdbClientPort;
         this.cacheService = cacheService;
     }
 
     @Override
+    @Deprecated
     public Mono<WhatsPopularResponse> getFreeToWatchTv(String language, String region, Integer page) {
         String effectiveLanguage = UseCaseHelpers.normalizeLanguage(language);
         String effectiveRegion = UseCaseHelpers.normalizeRegion(region);
@@ -65,6 +68,7 @@ public class GetFreeToWatchTvUseCase implements FreeToWatchTvPort {
                 }));
     }
 
+    @Deprecated
     private String buildCacheKey(String language, String region, int page) {
         return "getFreeToWatchTv:" + language + ":" + region + ":" + page;
     }
