@@ -3,9 +3,8 @@ package com.api.tmdb.adapter.outbound.tmdb;
 import com.api.tmdb.adapter.outbound.tmdb.mapper.DiscoverMapper;
 import com.api.tmdb.domain.model.DiscoverParams;
 import com.api.tmdb.domain.model.WhatsPopularResponse;
-import com.api.tmdb.domain.port.outbound.TmdbWhatsPopularClientPort;
+import com.api.tmdb.domain.port.outbound.TmdbDiscoverPort;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
@@ -14,17 +13,12 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.util.function.Function;
 
-/**
- * @deprecated Use {@link TmdbDiscoverAdapter} instead.
- */
-@Deprecated
 @Component
-@Primary
-public class TmdbDiscoverClientAdapter extends TmdbBaseAdapter implements TmdbWhatsPopularClientPort {
+public class TmdbDiscoverAdapter extends TmdbBaseAdapter implements TmdbDiscoverPort {
 
     private final DiscoverMapper discoverMapper;
 
-    public TmdbDiscoverClientAdapter(
+    public TmdbDiscoverAdapter(
             @Qualifier("tmdbWebClient") WebClient webClient,
             DiscoverMapper discoverMapper) {
         super(webClient);
