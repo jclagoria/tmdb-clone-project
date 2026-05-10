@@ -4,10 +4,8 @@ import com.api.tmdb.application.dto.response.NowPlayingResponseDTO;
 import com.api.tmdb.application.dto.response.TvOnTheAirResponseDTO;
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
 import com.api.tmdb.application.usecase.GetDiscoverUseCase;
-import com.api.tmdb.application.usecase.GetForRentUseCase;
 import com.api.tmdb.application.usecase.GetNowPlayingUseCase;
 import com.api.tmdb.application.usecase.GetTvOnTheAirUseCase;
-import com.api.tmdb.application.usecase.GetWhatsPopularUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,18 +28,15 @@ public class WhatsPopularController {
 
     private static final Logger logger = LoggerFactory.getLogger(WhatsPopularController.class);
     private final GetDiscoverUseCase getDiscoverUseCase;
-    private final GetForRentUseCase getForRentUseCase;
     private final GetNowPlayingUseCase getNowPlayingUseCase;
     private final GetTvOnTheAirUseCase getTvOnTheAirUseCase;
 
     public WhatsPopularController(
             GetDiscoverUseCase getDiscoverUseCase,
-            GetForRentUseCase getForRentUseCase,
             GetNowPlayingUseCase getNowPlayingUseCase,
             GetTvOnTheAirUseCase getTvOnTheAirUseCase
     ) {
         this.getDiscoverUseCase = getDiscoverUseCase;
-        this.getForRentUseCase = getForRentUseCase;
         this.getNowPlayingUseCase = getNowPlayingUseCase;
         this.getTvOnTheAirUseCase = getTvOnTheAirUseCase;
     }
@@ -92,7 +87,7 @@ public class WhatsPopularController {
             @RequestParam(name = "page", defaultValue = "1") Integer page) {
         logger.info("getForRent request: language={}, region={}, page={}", language, region, page);
 
-        Mono<WhatsPopularResponseDTO> response = getForRentUseCase
+        Mono<WhatsPopularResponseDTO> response = getDiscoverUseCase
                 .getForRent(language, region, page)
                 .map(WhatsPopularResponseDTO::fromDomain);
 

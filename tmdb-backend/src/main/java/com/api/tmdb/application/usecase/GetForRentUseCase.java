@@ -12,6 +12,10 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
+/**
+ * @deprecated Use {@link GetDiscoverUseCase#getForRent(String, String, Integer)} instead.
+ */
+@Deprecated
 @Service
 public class GetForRentUseCase implements WhatsPopularPort {
 
