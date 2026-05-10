@@ -1,61 +1,82 @@
 package com.api.tmdb.application.usecase;
 
-import com.api.tmdb.application.cache.CacheService;
 import com.api.tmdb.domain.model.TvOnTheAirResponse;
-import com.api.tmdb.domain.port.inbound.TvOnTheAirPort;
-import com.api.tmdb.domain.port.outbound.TmdbTvOnTheAirPort;
+import com.api.tmdb.domain.model.WhatsPopularResponse;
+import com.api.tmdb.domain.port.inbound.TvSeriesListPort;
+import com.api.tmdb.domain.port.outbound.TmdbTvSeriesListPort;
+import com.api.tmdb.infrastructure.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-
 @Service
-public class GetTvOnTheAirUseCase implements TvOnTheAirPort {
+public class GetTvOnTheAirUseCase implements TvSeriesListPort {
 
     private static final Logger log = LoggerFactory.getLogger(GetTvOnTheAirUseCase.class);
-    private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
-    private final TmdbTvOnTheAirPort tmdbTvOnTheAirPort;
-    private final CacheService cacheService;
+    private final TmdbTvSeriesListPort tmdbTvSeriesListPort;
 
-    public GetTvOnTheAirUseCase(TmdbTvOnTheAirPort tmdbTvOnTheAirPort, CacheService cacheService) {
-        this.tmdbTvOnTheAirPort = tmdbTvOnTheAirPort;
-        this.cacheService = cacheService;
+    public GetTvOnTheAirUseCase(TmdbTvSeriesListPort tmdbTvSeriesListPort) {
+        this.tmdbTvSeriesListPort = tmdbTvSeriesListPort;
     }
 
     @Override
-    public Mono<TvOnTheAirResponse> getTvOnTheAir(String language, Integer page, String timezone) {
+    @Cacheable(
+        key = "'tvOnTheAir:' + #language + ':' + #page + ':' + #timezone",
+        type = TvOnTheAirResponse.class,
+        ttlMinutes = 30
+    )
+    public Mono<TvOnTheAirResponse> getOnTheAir(String language, Integer page, String timezone) {
         String effectiveLanguage = UseCaseHelpers.normalizeLanguage(language);
         int effectivePage = UseCaseHelpers.normalizePage(page);
         String effectiveTimezone = UseCaseHelpers.normalizeTimezone(timezone);
 
-        String cacheKey = buildCacheKey(effectiveLanguage, effectivePage, effectiveTimezone);
-
         log.debug("Executing GetTvOnTheAirUseCase: language={}, page={}, timezone={}",
                 effectiveLanguage, effectivePage, effectiveTimezone);
 
-        return cacheService.get(cacheKey, TvOnTheAirResponse.class)
-                .flatMap(cached -> {
-                    log.debug("Cache hit for getTvOnTheAir: {}", cacheKey);
-                    return Mono.just(cached);
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.debug("Cache miss for getTvOnTheAir: {}", cacheKey);
-                    return tmdbTvOnTheAirPort.getTvOnTheAir(effectiveLanguage, effectivePage, effectiveTimezone)
-                            .flatMap(response -> {
-                                log.debug("GetTvOnTheAirUseCase completed: totalResults={}",
-                                        response.totalResults());
-                                return cacheService.set(cacheKey, response, CACHE_TTL)
-                                        .thenReturn(response);
-                            })
-                            .doOnError(error ->
-                                    log.error("GetTvOnTheAirUseCase failed: {}", error.getMessage(), error));
-                }));
+        return tmdbTvSeriesListPort.getOnTheAir(effectiveLanguage, effectivePage, effectiveTimezone)
+                .doOnSuccess(response -> log.debug("GetTvOnTheAirUseCase completed: totalResults={}", 
+                        response.totalResults()));
     }
 
-    private String buildCacheKey(String language, int page, String timezone) {
-        return "getTvOnTheAir:" + language + ":" + page + ":" + timezone;
+    @Override
+    @Cacheable(
+        key = "'tvAiringToday:' + #language + ':' + #page + ':' + #timezone",
+        type = TvOnTheAirResponse.class,
+        ttlMinutes = 30
+    )
+    public Mono<TvOnTheAirResponse> getAiringToday(String language, Integer page, String timezone) {
+        String effectiveLanguage = UseCaseHelpers.normalizeLanguage(language);
+        int effectivePage = UseCaseHelpers.normalizePage(page);
+        String effectiveTimezone = UseCaseHelpers.normalizeTimezone(timezone);
+        
+        return tmdbTvSeriesListPort.getAiringToday(effectiveLanguage, effectivePage, effectiveTimezone);
+    }
+
+    @Override
+    @Cacheable(
+        key = "'tvSeriesList:popular:' + #language + ':' + #page",
+        type = WhatsPopularResponse.class,
+        ttlMinutes = 60
+    )
+    public Mono<WhatsPopularResponse> getPopular(String language, Integer page) {
+        String effectiveLanguage = UseCaseHelpers.normalizeLanguage(language);
+        int effectivePage = UseCaseHelpers.normalizePage(page);
+        
+        return tmdbTvSeriesListPort.getPopular(effectiveLanguage, effectivePage);
+    }
+
+    @Override
+    @Cacheable(
+        key = "'tvSeriesList:topRated:' + #language + ':' + #page",
+        type = WhatsPopularResponse.class,
+        ttlMinutes = 120
+    )
+    public Mono<WhatsPopularResponse> getTopRated(String language, Integer page) {
+        String effectiveLanguage = UseCaseHelpers.normalizeLanguage(language);
+        int effectivePage = UseCaseHelpers.normalizePage(page);
+        
+        return tmdbTvSeriesListPort.getTopRated(effectiveLanguage, effectivePage);
     }
 }
