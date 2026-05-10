@@ -1,7 +1,7 @@
 package com.api.tmdb.adapter.inbound.web;
 
 import com.api.tmdb.application.dto.response.WhatsPopularResponseDTO;
-import com.api.tmdb.application.usecase.GetFreeToWatchUseCase;
+import com.api.tmdb.application.usecase.GetDiscoverUseCase;
 import com.api.tmdb.application.usecase.GetFreeToWatchTvUseCase;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,13 +24,13 @@ import reactor.core.publisher.Mono;
 public class FreeToWatchController {
 
     private static final Logger logger = LoggerFactory.getLogger(FreeToWatchController.class);
-    private final GetFreeToWatchUseCase getFreeToWatchUseCase;
+    private final GetDiscoverUseCase getDiscoverUseCase;
     private final GetFreeToWatchTvUseCase getFreeToWatchTvUseCase;
 
     public FreeToWatchController(
-            GetFreeToWatchUseCase getFreeToWatchUseCase,
+            GetDiscoverUseCase getDiscoverUseCase,
             GetFreeToWatchTvUseCase getFreeToWatchTvUseCase) {
-        this.getFreeToWatchUseCase = getFreeToWatchUseCase;
+        this.getDiscoverUseCase = getDiscoverUseCase;
         this.getFreeToWatchTvUseCase = getFreeToWatchTvUseCase;
     }
 
@@ -53,8 +53,8 @@ public class FreeToWatchController {
             @RequestParam(name = "page", defaultValue = "1") Integer page) {
         logger.info("getFreeMovies request: language={}, region={}, page={}", language, region, page);
 
-        Mono<WhatsPopularResponseDTO> response = getFreeToWatchUseCase
-                .getFreeToWatch(language, region, page)
+        Mono<WhatsPopularResponseDTO> response = getDiscoverUseCase
+                .getFreeMovies(language, region, page)
                 .map(WhatsPopularResponseDTO::fromDomain);
 
         return ResponseEntity.ok(response);
