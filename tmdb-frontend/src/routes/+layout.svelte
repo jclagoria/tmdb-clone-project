@@ -27,7 +27,7 @@
 
 <Header onSearch={handleSearch} />
 
-<main>
+<main class="pt-16">
 	{@render children()}
 </main>
 

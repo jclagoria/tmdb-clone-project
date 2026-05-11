@@ -1,5 +1,5 @@
-import { mockMovies, mockTVShows, mockTrending, mockPopular, mockFreeToWatch } from '$lib/data/movies';
-import type { Movie, SearchResponse } from '$lib/types/movie';
+import { mockMovies, mockTVShows, mockTrending, mockPopular, mockFreeToWatch, mockMovieDetails } from '$lib/data/movies';
+import type { Movie, SearchResponse, MovieDetails } from '$lib/types/movie';
 
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
@@ -122,6 +122,19 @@ export async function searchMovies(query: string): Promise<SearchResponse> {
 		};
 	}
 	return fetchWithAuth(`/search/multi?query=${encodeURIComponent(query)}`) as Promise<SearchResponse>;
+}
+
+export async function getMovieDetails(id: string | number): Promise<MovieDetails> {
+	const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+	if (mockMode || !apiKey) {
+		const movie = mockMovieDetails[numericId];
+		if (movie) {
+			return movie;
+		}
+		throw new Error('Movie not found in mock data');
+	}
+	const data = await fetchWithAuth<MovieDetails>(`/movie/${id}?append_to_response=credits,keywords,videos,reviews`);
+	return data;
 }
 
 async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise<T> {

@@ -1,4 +1,4 @@
-import type { Movie } from '$lib/types/movie';
+import type { Movie, MovieDetails } from '$lib/types/movie';
 
 export const mockMovies: Movie[] = [
 	{
@@ -307,3 +307,89 @@ export const mockTVShows: Movie[] = mockMovies.filter(m => m.media_type === 'tv'
 export const mockTrending: Movie[] = mockMovies.slice(0, 10);
 export const mockPopular: Movie[] = mockMovies.slice(5, 15);
 export const mockFreeToWatch: Movie[] = [...mockMovies].reverse().slice(0, 10);
+
+export const mockMovieDetails: Record<number, MovieDetails> = {
+	687163: {
+		id: 687163,
+		title: 'Project Hail Mary',
+		original_title: 'Project Hail Mary',
+		overview: 'Science teacher Ryland Grace wakes up on a spaceship light years from home with no recollection of who he is or how he got there. As his memory returns, he begins to uncover his mission: solve the riddle of the mysterious substance causing the sun to die out. He must call on his scientific knowledge and unorthodox ideas to save everything on Earth from extinction.',
+		poster_path: '/yihdXomYb5kTeSivtFndMy5iDmf.jpg',
+		backdrop_path: '/5rY1C5GMRnz5LhRuiYyLniU3Pe.jpg',
+		release_date: '2026-03-19',
+		vote_average: 8.0,
+		vote_count: 450,
+		genre_ids: [878, 12],
+		adult: false,
+		original_language: 'en',
+		popularity: 850.5,
+		media_type: 'movie',
+		tagline: 'Believe in the Hail Mary.',
+		runtime: 157,
+		status: 'Released',
+		budget: 200000000,
+		revenue: 655800000,
+		genres: [
+			{ id: 878, name: 'Science Fiction' },
+			{ id: 12, name: 'Adventure' }
+		],
+		credits: {
+			cast: [
+				{ id: 30614, name: 'Ryan Gosling', original_name: 'Ryan Gosling', character: 'Ryland Grace', profile_path: '/lyUyVARQKhGxaxy0FbPJCQRpiaW.jpg', order: 1 },
+				{ id: 1254542, name: 'Sandra Hüller', original_name: 'Sandra Hüller', character: 'Eva Stratt', profile_path: '/7wA2GzFJRmMXnUkqLZVlNBxLX2t.jpg', order: 2 },
+				{ id: 4562258, name: 'James Ortiz', original_name: 'James Ortiz', character: 'Rocky (voice)', profile_path: '/8f4nIypoYEEiNWRVKGZlO2kqDqF.jpg', order: 3 },
+				{ id: 1989392, name: 'Lionel Boyce', original_name: 'Lionel Boyce', character: 'Carl', profile_path: '/5叮KspA5IKl4u1J6kI0uV9qJZS.jpg', order: 4 },
+				{ id: 1559255, name: 'Milana Vayntrub', original_name: 'Milana Vayntrub', character: 'Olesya Ilyukhina', profile_path: '/5FxP11jKh1uF1dG8l2X8z8v9w5.jpg', order: 5 },
+				{ id: 956849, name: 'Ken Leung', original_name: 'Ken Leung', character: 'Yao', profile_path: '/sYblW0nJ5y8vLh5y8nX5Q6Q5Y5.jpg', order: 6 },
+				{ id: 4071491, name: 'Priya Kansara', original_name: 'Priya Kansara', character: 'Mary (voice)', profile_path: '/z6FG1R1oMjLxfB5eMNJ0q5v5Q5Q.jpg', order: 7 },
+				{ id: 4326423, name: 'Mia Soteriou', original_name: 'Mia Soteriou', character: 'Dr. Browne', profile_path: '/p4VZ3hWJyaF6A1i8i1i1i1i1i1i.jpg', order: 8 },
+				{ id: 4532158, name: 'Annelle Olaleye', original_name: 'Annelle Olaleye', character: 'Olivia', profile_path: '/q5VZ5x1x5x5x5x5x5x5x5x5.jpg', order: 9 }
+			],
+			crew: [
+				{ id: 34965, name: 'Phil Lord', job: 'Director', department: 'Directing', profile_path: null },
+				{ id: 34966, name: 'Christopher Miller', job: 'Director', department: 'Directing', profile_path: null },
+				{ id: 1000099, name: 'Andy Weir', job: 'Novel', department: 'Writing', profile_path: null },
+				{ id: 34967, name: 'Drew Goddard', job: 'Screenplay', department: 'Writing', profile_path: null }
+			]
+		},
+		keywords: [
+			{ id: 9993, name: 'coma' },
+			{ id: 9882, name: 'based on novel or book' },
+			{ id: 9805, name: 'sun' },
+			{ id: 10670, name: 'language barrier' },
+			{ id: 4395, name: 'space travel' },
+			{ id: 15426, name: 'bravery' },
+			{ id: 14792, name: 'space mission' },
+			{ id: 4238, name: 'friendship' },
+			{ id: 13577, name: 'space' },
+			{ id: 9303, name: 'alien' },
+			{ id: 9748, name: 'memory loss' },
+			{ id: 10464, name: 'suicide mission' },
+			{ id: 3766, name: 'astronaut' },
+			{ id: 15095, name: 'scientist' },
+			{ id: 15165, name: 'science teacher' },
+			{ id: 11538, name: 'save the planet' },
+			{ id: 10088, name: 'spaceship' },
+			{ id: 10616, name: 'interspecies friendship' },
+			{ id: 9727, name: 'comforting' },
+			{ id: 5242, name: 'hopeful' }
+		],
+		videos: {
+			results: [
+				{ id: '123456', key: '代入式 YouTube embed', name: 'Official Trailer', site: 'YouTube', type: 'Trailer', published_at: '2026-01-15' },
+				{ id: '234567', key: '123456789', name: 'Teaser Trailer', site: 'YouTube', type: 'Teaser', published_at: '2025-12-01' }
+			]
+		},
+		reviews: {
+			results: [
+				{
+					id: '1',
+					author: 'JPV852',
+					author_details: { name: 'JPV852', username: 'JPV852', rating: 4, avatar_path: null },
+					content: 'Never read (or heard of the book but not much of a book reader aside from crime-thrillers) so I don\'t know anything about it, but thought this was a lot of fun with heart and Ryan Gosling was great. Still, solid sci-fi drama.',
+					created_at: '2026-03-22T12:00:00Z'
+				}
+			]
+		}
+	}
+};
