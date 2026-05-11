@@ -71,3 +71,93 @@ export function getYear(item: Movie): string {
 export function getTitle(item: Movie): string {
 	return item.title || item.name || 'Unknown';
 }
+
+export interface CastMember {
+	id: number;
+	name: string;
+	original_name: string;
+	character: string;
+	profile_path: string | null;
+	order: number;
+}
+
+export interface CrewMember {
+	id: number;
+	name: string;
+	job: string;
+	department: string;
+	profile_path: string | null;
+}
+
+export interface Keyword {
+	id: number;
+	name: string;
+}
+
+export interface Video {
+	id: string;
+	key: string;
+	name: string;
+	site: string;
+	type: string;
+	published_at: string;
+}
+
+export interface Review {
+	id: string;
+	author: string;
+	author_details: {
+		name: string;
+		username: string;
+		rating: number;
+		avatar_path: string | null;
+	};
+	content: string;
+	created_at: string;
+}
+
+export interface MovieDetails extends Movie {
+	tagline: string;
+	runtime: number;
+	status: string;
+	budget: number;
+	revenue: number;
+	genres: Genre[];
+	credits: {
+		cast: CastMember[];
+		crew: CrewMember[];
+	};
+	keywords: Keyword[];
+	videos: {
+		results: Video[];
+	};
+	reviews: {
+		results: Review[];
+	};
+}
+
+export function formatRuntime(minutes: number): string {
+	const hours = Math.floor(minutes / 60);
+	const mins = minutes % 60;
+	return `${hours}h ${mins}m`;
+}
+
+export function formatCurrency(amount: number): string {
+	return new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: 'USD',
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0
+	}).format(amount);
+}
+
+export function getDirector(crew: CrewMember[]): CrewMember | undefined {
+	return crew.find(c => c.job === 'Director');
+}
+
+export function getWriters(crew: CrewMember[]): CrewMember[] {
+	return crew.filter(c => 
+		c.department === 'Writing' && 
+		['Screenplay', 'Writer', 'Novel', 'Story'].includes(c.job)
+	);
+}
